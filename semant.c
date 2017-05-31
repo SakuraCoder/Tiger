@@ -36,9 +36,9 @@ struct expty expTy(Tr_exp exp, Ty_ty ty)
 
 /*-----------------------------------------------------------------------------------------------------*/
 /*recursive function of absyn tree*/
-static struct expty transVar(Tr_level level, Tr_exp breakk,S_table venv, S_table tenv, A_var v);
-static struct expty transExp(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table tenv, A_exp e);
-static		 Tr_exp transDec(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table tenv, A_dec d);
+static struct expty transVar(Tr_level level, Tr_exp breakk, S_table venv, S_table tenv, A_var v);
+static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_table tenv, A_exp e);
+static		 Tr_exp transDec(Tr_level level, Tr_exp breakk, S_table venv, S_table tenv, A_dec d);
 static		  Ty_ty	transTy(											 S_table tenv, A_ty  t);
 
 /*-----------------------------------------------------------------------------------------------------*/
@@ -53,6 +53,15 @@ static Ty_fieldList makeFieldTys(S_table, A_fieldList); /*may use #define*/
 static U_boolList makeFormals(A_fieldList); /*may use #define*/
 
 /*-----------------------------------------------------------------------------------------------------*/
+static int is_equal_ty(Ty_ty tType, Ty_ty eType)
+{
+	Ty_ty actualtType = actual_ty(tType);
+	int tyKind = actualtType->kind;
+	int eKind = eType->kind;
+	return ( ((tyKind == Ty_record || tyKind == Ty_array) && actualtType == eType) ||
+		(tyKind == Ty_record && eKind == Ty_nil) ||
+		(tyKind != Ty_record && tyKind != Ty_array && tyKind == eKind) );
+}
 
 F_fragList SEM_transProg(A_exp exp) {
 	struct expty et;
@@ -150,7 +159,7 @@ static struct expty transVar(Tr_level level, Tr_exp breakk,S_table venv, S_table
 	}
 }
 
-static struct expty transExp(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table tenv, A_exp e) 
+static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_table tenv, A_exp e) 
 {
 	/*Empty*/
 	if (!e)
@@ -207,8 +216,8 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table
 	case A_opExp:
 	{
 		A_oper oper = e->u.op.oper;
-		struct expty left = transExp(level, venv, tenv, breakk, e->u.op.left);
-		struct expty right = transExp(level, venv, tenv, breakk, e->u.op.right);
+		struct expty left = transExp(level, breakk, venv, tenv,  e->u.op.left);
+		struct expty right = transExp(level, breakk, venv, tenv,  e->u.op.right);
 		Tr_exp Trans = Tr_noExp();
 		switch (oper)
 		{
@@ -443,7 +452,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table
 	}
 }
 
-static		 Tr_exp transDec(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table tenv, A_dec d) {
+static		 Tr_exp transDec(Tr_level level, Tr_exp breakk, S_table venv, S_table tenv, A_dec d) {
 
 	struct expty res_exp;
 	Tr_access tr_access;

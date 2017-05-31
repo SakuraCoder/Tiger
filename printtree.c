@@ -102,3 +102,10 @@ void printStmList (FILE *out, T_stmList stmList)
     pr_stm(out, stmList->head,0); fprintf(out, "\n");
   }
 }
+void printExp(T_exp e, FILE * out) {
+  pr_tree_exp(out, e, 0);
+}
+void printStm(T_stm s, FILE * out) {
+  pr_stm(out, s, 0);
+}
+

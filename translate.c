@@ -3,7 +3,7 @@
 #include "tree.h"
 #include "frame.h"
 #include "translate.h"
-
+#include "printtree.h"
 
 struct Cx{patchList trues; patchList falses; T_stm stm;};
 
@@ -35,6 +35,7 @@ struct patchList_
 	Temp_label *head;
 	patchList tail;
 };
+
 
 static Tr_exp Tr_Ex(T_exp ex);
 static Tr_exp Tr_Nx(T_stm nx);
@@ -520,4 +521,31 @@ F_fragList Tr_getResult(void)  //need revise
 		prev = cursor;
 	if (prev) prev->tail = fragList;
 	return stringFragList ? stringFragList : fragList;
+}
+
+void print(Tr_exp et, FILE * out) {
+    if (et->kind == Tr_ex) printExp(unEx(et), out);
+	if (et->kind == Tr_nx) printStm(unNx(et), out);
+	if (et->kind == Tr_cx) printStm(unCx(et).stm, out);
+} 
+
+void print_frag(F_fragList fl, FILE * out) {
+	if (!fl) {
+		puts("fragList is NULL");
+		return;
+	}
+	while (fl) {
+		F_frag f = fl->head;
+		switch(f->kind) {
+		case F_stringFrag:
+			print(Tr_Ex(T_Name(f->u.stringg.label)), out);
+			fprintf(out, "\n");
+			break;
+		case F_procFrag:
+			print(Tr_Nx(f->u.proc.body), out);
+			break;
+		default: assert(0 && "frag-kind is error");
+		}
+		fl = fl->tail;
+	}
 }
