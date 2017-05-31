@@ -1,7 +1,4 @@
-#include "types.h"
-#include "translate.h"
-#include "temp.h"
-#include "symbol.h"
+
 
 typedef struct E_enventry_ *E_enventry;
 

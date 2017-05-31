@@ -1,7 +1,8 @@
-#include"temp.h"
-#include "frame.h"
-#include "util.h"
+#include "symbol.h"
+#include "temp.h"
 #include "tree.h"
+#include "frame.h"
+
 
 const int F_WORD_SIZE = 4;
 struct F_access_ {

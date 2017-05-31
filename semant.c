@@ -2,14 +2,18 @@
 #include <stdio.h>
 #include <stdlib.h> 
 #include <assert.h>
-#include "semant.h"
-#include "env.h"
+
 #include "absyn.h"
-#include "util.h"
-#include "symbol.h"
 #include "types.h"
+#include "temp.h"
+#include "tree.h"
+#include "frame.h"
 #include "translate.h"
+#include "env.h"
+
+
 #include "errormsg.h"
+#include "semant.h"
 
 struct expty 
 {
@@ -180,7 +184,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table
 		{
 			struct expty arg = transExp(level, breakk, venv, tenv, args->head);
 			/*action: */
-			Tr_expList_prepend(arg.exp, &argList);
+			Tr_expList_annotate(arg.exp, &argList);
 		}
 		Tr_exp trans = Tr_noExp();
 		if (callEnv && callEnv->kind == E_funEntry)
@@ -214,11 +218,11 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table
 		case A_divideOp:
 			if (left.ty->kind != Ty_int)
 				EM_error(e->u.op.left->pos, "left-hand side type %s: expected int",
-					Ty_ToString(left.ty));
+					Ty_String(left.ty));//?
 			if (right.ty->kind != Ty_int)
 				EM_error(e->u.op.right->pos, "right-hand side type %s: expected int",
-					Ty_ToString(right.ty));
-			return expTy(Tr_arithExp(oper, left.exp, right.exp), Ty_Int());
+					Ty_String(right.ty));
+			return expTy(Tr_binOpExp(oper, left.exp, right.exp), Ty_Int());
 			/*questions*/
 			/* == and != */
 		case A_eqOp:
@@ -228,7 +232,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table
 			case Ty_int:
 				if (is_equal_ty(right.ty, left.ty))
 					/*action:*/
-					Trans = Tr_eqExp(oper, left.exp, right.exp);
+					Trans = Tr_relOpExp(oper, left.exp, right.exp);
 				break;
 			case Ty_string:
 				if (is_equal_ty(right.ty, left.ty))
@@ -241,10 +245,10 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table
 				{
 					EM_error(e->u.op.right->pos,
 						"left - hand side type %s: expected %s",
-						Ty_ToString(right.ty), Ty_ToString(left.ty));
+						Ty_String(right.ty), Ty_String(left.ty));
 				}
 				/*action:*/
-				Trans = Tr_eqRef(oper, left.exp, right.exp);
+				Trans = Tr_relOpExp(oper, left.exp, right.exp);
 				break;
 			}
 			case Ty_record:
@@ -253,16 +257,16 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table
 				{
 					EM_error(e->u.op.right->pos,
 						"right - hand side type %s: expected record or nil",
-						Ty_ToString(right.ty));
+						Ty_String(right.ty));
 				}
 				/*action:*/
-				Trans = Tr_eqRef(oper, left.exp, right.exp);
+				Trans = Tr_relOpExp(oper, left.exp, right.exp);
 				break;
 			}
 			default:
 			{
 				EM_error(e->u.op.right->pos, "Unexpected %s expression in equation or inquation.",
-					Ty_ToString(right.ty));
+					Ty_String(right.ty));
 			}
 			}
 			return expTy(Trans, Ty_Int());
@@ -275,18 +279,18 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table
 			{
 				EM_error(e->u.op.right->pos,
 					"%s expression given for RHS; expected %s",
-					Ty_ToString(right.ty), Ty_ToString(left.ty));
+					Ty_String(right.ty), Ty_String(left.ty));
 			}
 			switch (left.ty->kind) 
 			{
 			case Ty_int:
-				Trans = Tr_relExp(oper, left.exp, right.exp); break;
+				Trans = Tr_relOpExp(oper, left.exp, right.exp); break;
 			case Ty_string:
 				Trans = Tr_noExp(); break;
 			default:
 			{
 				EM_error(e->u.op.right->pos, "unexpected type %s in comparsion",
-					Ty_ToString(right.ty));
+					Ty_String(right.ty));
 				Trans = Tr_noExp();
 			}
 			}
@@ -321,7 +325,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table
 				for (el = e->u.record.fields; el; el = el->tail, n++)
 				{
 					struct expty val = transExp(level, breakk, venv, tenv, el->head->exp);
-					Tr_expList_prepend(val.exp, &l);
+					Tr_expList_annotate(val.exp, &l);
 				}
 				return expTy(Tr_recordExp(n, l), recty);
 			}
@@ -338,7 +342,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table
 		}
 		for (; list; list = list->tail) {
 			seqone = transExp(level, breakk, venv, tenv, list->head);
-			Tr_expList_prepend(seqone.exp, &l);
+			Tr_expList_annotate(seqone.exp, &l);
 		}
 		return expTy(Tr_seqExp(l), seqone.ty);
 	}
@@ -395,10 +399,10 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table
 		S_beginScope(venv);
 		S_beginScope(tenv);
 		for (decs = e->u.let.decs; decs; decs = decs->tail) {
-			Tr_expList_prepend(transDec(level, breakk, venv, tenv, decs->head), &l);
+			Tr_expList_annotate(transDec(level, breakk, venv, tenv, decs->head), &l);
 		}
 		struct expty final = transExp(level, breakk, venv, tenv, e->u.let.body);
-		Tr_expList_prepend(final.exp, &l);
+		Tr_expList_annotate(final.exp, &l);
 		S_endScope(venv);
 		S_endScope(tenv);
 		return expTy(Tr_seqExp(l), final.ty);
@@ -718,6 +722,55 @@ static U_boolList makeFormals(A_fieldList params)
 		fl = fl->tail;
 	}
 	return head;
+}
+
+static bool args_match(Tr_level level, Tr_exp breakk, S_table v, S_table tt, A_expList ell, Ty_tyList fll, A_exp fun) {
+	struct expty t;
+	A_expList el = ell;
+	Ty_tyList fl = fll;
+
+	while (el && fl) {
+		t = transExp(level, breakk, v, tt, el->head);
+		if (!ty_match(t.ty, fl->head)){
+			EM_error(fun->pos, "unmatched params in function %s\n", S_name(fun->u.call.func));
+			return FALSE;
+		}
+		el = el->tail;
+		fl = fl->tail;
+	}
+	if (el && !fl) {
+		EM_error(fun->pos,"too many params in function %s\n", S_name(fun->u.call.func));
+		return FALSE;
+	} else if (!el && fl) {
+		EM_error(fun->pos, "less params in function %s\n", S_name(fun->u.call.func));
+		return FALSE;
+	} else {
+		return TRUE;
+	}
+}
+
+
+static bool efields_match(Tr_level level, Tr_exp breakk, S_table v, S_table t, Ty_ty tyy, A_exp e) {
+	struct expty et;
+	Ty_fieldList ty = tyy->u.record;
+	A_efieldList fl = e->u.record.fields;
+	while (ty && fl) {
+		et = transExp(level, breakk, v, t, fl->head->exp);
+		if (!(ty->head->name == fl->head->name) || !ty_match(ty->head->ty, et.ty)){
+			EM_error(e->pos, "unmatched name: type in %s", S_name(e->u.record.typ));
+			return FALSE;
+		}
+		ty = ty->tail;
+		fl = fl->tail;
+	}
+	if (ty && !fl) {
+		EM_error(e->pos, "less fields in %s", S_name(e->u.record.typ));
+		return FALSE;
+	} else if (!ty && fl) {
+		EM_error(e->pos, "too many field in %s", S_name(e->u.record.typ));
+		return FALSE;
+	}
+	return TRUE;
 }
 
 static bool ty_match(Ty_ty type1, Ty_ty type2)

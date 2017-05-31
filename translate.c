@@ -1,5 +1,9 @@
-#include "translate.h"
+#include "absyn.h"
+#include "temp.h"
 #include "tree.h"
+#include "frame.h"
+#include "translate.h"
+
 
 struct Cx{patchList trues; patchList falses; T_stm stm;};
 
@@ -56,14 +60,14 @@ Tr_accessList Tr_AccessList(Tr_access h, Tr_accessList t) {
 
 static Tr_exp Tr_Ex(T_exp ex) //tree expression(with return value)
 {
-	Tr_exp tr_ex = check_malloc(sizeof(*tr_ex));
+	Tr_exp tr_ex = checked_malloc(sizeof(*tr_ex));
 	tr_ex->kind = Tr_ex;
 	tr_ex->u.ex = ex;
 	return tr_ex;
 }
 static Tr_exp Tr_Nx(T_stm nx) //tree non-expression(a statement)
 {
-	Tr_exp tr_nx = check_malloc(sizeof(*tr_nx));
+	Tr_exp tr_nx = checked_malloc(sizeof(*tr_nx));
 	tr_nx->kind = Tr_nx;
 	tr_nx->u.nx = nx;
 	return tr_nx;

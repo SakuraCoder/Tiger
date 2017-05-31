@@ -5,6 +5,7 @@ typedef char bool;
 
 #define TRUE 1
 #define FALSE 0
+#define MAX_LENGTH 65535
 
 void *checked_malloc(int);
 string String(char *);

@@ -1,7 +1,3 @@
-#include "absyn.h"
-#include "util.h"
-#include "temp.h"
-#include "frame.h"
 
 typedef struct Tr_exp_ *Tr_exp;
 typedef struct patchList_ *patchList;

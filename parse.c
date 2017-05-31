@@ -6,8 +6,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "util.h"
-#include "symbol.h"
 #include "absyn.h"
 #include "errormsg.h"
 #include "parse.h"
