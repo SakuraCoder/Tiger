@@ -218,10 +218,10 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table
 		case A_divideOp:
 			if (left.ty->kind != Ty_int)
 				EM_error(e->u.op.left->pos, "left-hand side type %s: expected int",
-					Ty_String(left.ty));//?
+					Ty_ToString(left.ty));//?
 			if (right.ty->kind != Ty_int)
 				EM_error(e->u.op.right->pos, "right-hand side type %s: expected int",
-					Ty_String(right.ty));
+					Ty_ToString(right.ty));
 			return expTy(Tr_binOpExp(oper, left.exp, right.exp), Ty_Int());
 			/*questions*/
 			/* == and != */
@@ -245,7 +245,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table
 				{
 					EM_error(e->u.op.right->pos,
 						"left - hand side type %s: expected %s",
-						Ty_String(right.ty), Ty_String(left.ty));
+						Ty_ToString(right.ty), Ty_ToString(left.ty));
 				}
 				/*action:*/
 				Trans = Tr_relOpExp(oper, left.exp, right.exp);
@@ -257,7 +257,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table
 				{
 					EM_error(e->u.op.right->pos,
 						"right - hand side type %s: expected record or nil",
-						Ty_String(right.ty));
+						Ty_ToString(right.ty));
 				}
 				/*action:*/
 				Trans = Tr_relOpExp(oper, left.exp, right.exp);
@@ -266,7 +266,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table
 			default:
 			{
 				EM_error(e->u.op.right->pos, "Unexpected %s expression in equation or inquation.",
-					Ty_String(right.ty));
+					Ty_ToString(right.ty));
 			}
 			}
 			return expTy(Trans, Ty_Int());
@@ -279,7 +279,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table
 			{
 				EM_error(e->u.op.right->pos,
 					"%s expression given for RHS; expected %s",
-					Ty_String(right.ty), Ty_String(left.ty));
+					Ty_ToString(right.ty), Ty_ToString(left.ty));
 			}
 			switch (left.ty->kind) 
 			{
@@ -290,7 +290,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, Tr_exp venv, S_table
 			default:
 			{
 				EM_error(e->u.op.right->pos, "unexpected type %s in comparsion",
-					Ty_String(right.ty));
+					Ty_ToString(right.ty));
 				Trans = Tr_noExp();
 			}
 			}

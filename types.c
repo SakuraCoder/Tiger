@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include "symbol.h"
+#include "errormsg.h"
 #include "types.h"
 
 static struct Ty_ty_ tynil = {Ty_nil};
@@ -34,7 +35,15 @@ Ty_ty Ty_Array(Ty_ty ty)
  p->u.array=ty;
  return p;
 }
-
+static char error_str_ty[][12] = {
+  "record", "nil", "int", "string",
+  "array", "name", "void"};
+char *Ty_ToString(Ty_ty t)
+{
+  if (t->kind == Ty_name)
+    return S_name(t->u.name.sym);
+  return error_str_ty[t->kind];
+}
 Ty_ty Ty_Name(S_symbol sym, Ty_ty ty)
 {Ty_ty p = checked_malloc(sizeof(*p));
  p->kind=Ty_name;
