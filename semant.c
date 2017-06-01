@@ -223,6 +223,8 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table v, S_table t
 		Tr_expList_prepend(final.exp, &l);
 		S_endScope(v);
 		S_endScope(t);
+		if(level->parent == NULL) // 是否在最外层
+			Tr_procEntryExit(level, Tr_seqExp(l), Tr_formals(level));
 		return expTy(Tr_seqExp(l), final.ty);
 	}
 	case A_opExp: {

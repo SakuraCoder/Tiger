@@ -4,17 +4,9 @@
 #include "frame.h"
 #include "translate.h"
 #include "printtree.h"
-struct Tr_level_ {
-	Tr_level parent;
-	Temp_label name;
-	F_frame frame;
-	Tr_accessList formals;
-};
 
-struct Tr_access_ {
-	Tr_level level;
-	F_access access;
-};
+
+
 
 static Tr_accessList makeFormalAccessList(Tr_level);
 static Tr_access Tr_Access(Tr_level, F_access);
