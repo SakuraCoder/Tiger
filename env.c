@@ -1,3 +1,4 @@
+/*Author: Zihan Zhao*/
 #include "absyn.h"
 #include "types.h"
 #include "temp.h"
@@ -8,94 +9,64 @@
 #include <stdlib.h>
 
 
+/*Ty_ty environment*/
+S_table E_base_tenv(void)
+{
+	S_table Ty_ty_BaseTable = S_empty();
+	S_enter(Ty_ty_BaseTable, S_Symbol("int"), Ty_Int());
+	S_enter(Ty_ty_BaseTable, S_Symbol("string"), Ty_String());
 
-S_table E_base_tenv(void) {
-	S_table init_t = S_empty();
-	S_enter(init_t, S_Symbol("int"), Ty_Int());
-	S_enter(init_t, S_Symbol("string"), Ty_String());
-	S_enter(init_t, S_Symbol("double"), Ty_Double());
-	return init_t;
+	return Ty_ty_BaseTable;
 }
 
-S_table E_base_venv(void) {
-  S_table t = S_empty();
-  
-  S_enter(
-    t,
-    S_Symbol("print"),
-    E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_String(), NULL), Ty_Void())
-  	);
-  S_enter(
-    t,
-    S_Symbol("flush"),
-    E_FunEntry(Tr_outermost(), Temp_newlabel(), NULL, Ty_Void())
-  	);
-  S_enter(
-    t,
-    S_Symbol("getchar"),
-    E_FunEntry(Tr_outermost(), Temp_newlabel(), NULL, Ty_String())
-  	);
-  S_enter(
-    t,
-    S_Symbol("ord"),
-    E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_String(), NULL), Ty_Int())
-  	);
-  S_enter(
-    t,
-    S_Symbol("chr"),
-    E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_Int(), NULL), Ty_String())
-  	);
-  S_enter(
-    t,
-    S_Symbol("size"),
-    E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_String(), NULL), Ty_Int())
-  	);
-  S_enter(
-    t,
-    S_Symbol("substring"),
-    E_FunEntry(
-		Tr_outermost(), 
-		Temp_newlabel(), 
-		Ty_TyList(Ty_String(), Ty_TyList(Ty_Int(), Ty_TyList(Ty_Int(), NULL))),
-		Ty_String())
-  	);
-  S_enter(
-    t,
-    S_Symbol("concat"),
-    E_FunEntry(
-		Tr_outermost(), 
-		Temp_newlabel(), 
-		Ty_TyList(Ty_String(), Ty_TyList(Ty_String(), NULL)),
-        Ty_String())
-  	);
-  S_enter(
-    t,
-    S_Symbol("not"),
-    E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_Int(), NULL), Ty_Int())
-  	);
-  S_enter(
-    t,
-    S_Symbol("exit"),
-    E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_Int(), NULL), Ty_Void())
-  	);
-	return t;
+/*E_enventry environment*/
+S_table E_base_venv(void) 
+{
+  S_table E_enventry_BaseTable = S_empty();
+
+  E_enventry Fun_print		= E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_String(), NULL),											  Ty_Void());
+  E_enventry Fun_flush		= E_FunEntry(Tr_outermost(), Temp_newlabel(), NULL,																      Ty_Void());
+  E_enventry Fun_getchar	= E_FunEntry(Tr_outermost(), Temp_newlabel(), NULL,																	  Ty_String());
+  E_enventry Fun_ord		= E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_String(), NULL),											  Ty_Int());
+  E_enventry Fun_chr		= E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_Int(),	 NULL),											  Ty_String());
+  E_enventry Fun_size		= E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_String(), NULL),											  Ty_Int());
+  E_enventry Fun_substring  = E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_String(), Ty_TyList(Ty_Int(), Ty_TyList(Ty_Int(), NULL))), Ty_String());
+  E_enventry Fun_concat		= E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_String(), Ty_TyList(Ty_String(), NULL)),					  Ty_String());
+  E_enventry Fun_not		= E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_Int(),	 NULL),											  Ty_Int());
+  E_enventry Fun_exit		= E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_Int(),	 NULL),											  Ty_Void());
+  /*Add basic functions of Tiger*/
+  S_enter(E_enventry_BaseTable, S_Symbol("print"), Fun_print);
+  S_enter(E_enventry_BaseTable, S_Symbol("flush"), Fun_flush);
+  S_enter(E_enventry_BaseTable, S_Symbol("getchar"), Fun_getchar);
+  S_enter(E_enventry_BaseTable, S_Symbol("ord"), Fun_ord);
+  S_enter(E_enventry_BaseTable, S_Symbol("chr"), Fun_chr);
+  S_enter(E_enventry_BaseTable, S_Symbol("size"), Fun_size);
+  S_enter(E_enventry_BaseTable, S_Symbol("substring"), Fun_substring);
+  S_enter(E_enventry_BaseTable, S_Symbol("concat"), Fun_concat);
+  S_enter(E_enventry_BaseTable, S_Symbol("not"), Fun_not);
+  S_enter(E_enventry_BaseTable, S_Symbol("exit"), Fun_exit);
+  return E_enventry_BaseTable;
 }
 
-E_enventry E_VarEntry(Tr_access a, Ty_ty ty) {
-	E_enventry final;
-	final = checked_malloc(sizeof(*final));
-	final->kind = E_varEntry;
-	final->u.var.access = a;
-	final->u.var.ty = ty;
-	return final;
+E_enventry E_VarEntry(Tr_access access, Ty_ty ty)
+{
+	E_enventry env = checked_malloc(sizeof(*env));
+
+	env->kind = E_varEntry;
+	env->u.var.access = access;
+	env->u.var.ty = ty;
+	return env;
 }
 
-E_enventry E_FunEntry(Tr_level level, Temp_label label, Ty_tyList fms, Ty_ty resl) {
-	E_enventry final = checked_malloc(sizeof(*final));
-	final->kind = E_funEntry;
-	final->u.fun.formals = fms;
-	final->u.fun.level = level;
-	final->u.fun.label = label;
-	final->u.fun.result  = resl;
-	return final;
+E_enventry E_FunEntry(Tr_level level, Temp_label label, Ty_tyList formals, Ty_ty result)
+{
+	E_enventry env = checked_malloc(sizeof(*env));
+
+	env->kind = E_funEntry;
+	env->u.fun.formals = formals;
+	env->u.fun.level = level;
+	env->u.fun.label = label;
+	env->u.fun.result  = result;
+
+	return env;
 }
