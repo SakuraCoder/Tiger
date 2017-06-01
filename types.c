@@ -10,11 +10,16 @@
 #include "errormsg.h"
 #include "types.h"
 
+
 static struct Ty_ty_ tynil = {Ty_nil};
 Ty_ty Ty_Nil(void) {return &tynil;}
 
 static struct Ty_ty_ tyint = {Ty_int};
 Ty_ty Ty_Int(void) {return &tyint;}
+
+static struct Ty_ty_ tydouble = {Ty_double};
+Ty_ty Ty_Double(void) {return &tydouble;}
+
 
 static struct Ty_ty_ tystring = {Ty_string};
 Ty_ty Ty_String(void) {return &tystring;}
@@ -35,15 +40,7 @@ Ty_ty Ty_Array(Ty_ty ty)
  p->u.array=ty;
  return p;
 }
-static char error_str_ty[][12] = {
-  "record", "nil", "int", "string",
-  "array", "name", "void"};
-char *Ty_ToString(Ty_ty t)
-{
-  if (t->kind == Ty_name)
-    return S_name(t->u.name.sym);
-  return error_str_ty[t->kind];
-}
+
 Ty_ty Ty_Name(S_symbol sym, Ty_ty ty)
 {Ty_ty p = checked_malloc(sizeof(*p));
  p->kind=Ty_name;
@@ -85,7 +82,7 @@ void Ty_print(Ty_ty t)
   if (t == NULL) printf("null");
   else { printf("%s", str_ty[t->kind]);
          if (t->kind == Ty_name) {
-	   printf(", %s", S_name(t->u.name.sym)); }
+     printf(", %s", S_name(t->u.name.sym)); }
        }
 }
 
@@ -100,4 +97,5 @@ void TyList_print(Ty_tyList list)
     printf(")");
   }
 }
+
 

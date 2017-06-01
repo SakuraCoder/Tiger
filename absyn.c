@@ -233,7 +233,14 @@ A_fieldList A_FieldList(A_field head, A_fieldList tail)
  p->tail=tail;
  return p;
 }
-
+A_exp A_DoubleExp(A_pos pos, double d)
+{
+	A_exp p = checked_malloc(sizeof(*p));
+	p->kind = A_doubleExp;
+	p->pos  = pos;
+	p->u.doublee = d;
+	return p;
+}
 A_expList A_ExpList(A_exp head, A_expList tail)
 {A_expList p = checked_malloc(sizeof(*p));
  p->head=head;
