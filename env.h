@@ -1,5 +1,6 @@
 /*Author: Zihan Zhao
   Reference: Textbook Page 81 & 101*/
+
 typedef struct E_enventry_ * E_enventry;
 
 struct E_enventry_ 
