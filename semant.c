@@ -338,6 +338,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 			SeqExpTy = transExp(level, breakk, venv, tenv, SeqExpList->head);
 			Tr_expList_prepend(SeqExpTy.exp, &Seq_TyList);
 		}
+
 		return expTy(Tr_seqExp(Seq_TyList), SeqExpTy.ty);
 	}
 	case A_assignExp:
@@ -346,12 +347,13 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 		struct expty AssignExp = transExp(level, breakk, venv, tenv, e->u.assign.exp);
 		if (!equal_ty(assignVar.ty, AssignExp.ty)) 
 			EM_error(e->pos, "Types of left and right side of assignment do not match!");
+
 		return expTy(Tr_assignExp(assignVar.exp, AssignExp.exp), Ty_Void());
 	}
 	case A_ifExp: 
 	{
 		struct expty final, final2;
-		struct expty final3 = { NULL, NULL };
+		struct expty final3 = expTy(Tr_noExp(), Ty_Void());
 		A_exp test_exp = e->u.iff.test;
 		A_exp then_exp = e->u.iff.then;
 		A_exp else_exp = e->u.iff.elsee;
@@ -618,10 +620,10 @@ static bool equal_ty(Ty_ty ty_a, Ty_ty ty_b)
 {
 	int a = actual_ty(ty_a)->kind;
 	int b = actual_ty(ty_b)->kind;
-
-	return ((a == Ty_nil && b == Ty_record) || (b == Ty_nil  && a == Ty_record)
-		|| ((a == Ty_record || a == Ty_array) && a == b)
-		|| (a != Ty_record && b != Ty_array && a == b));
+	bool Record_equal_nil = (a == Ty_nil && b == Ty_record) || (b == Ty_nil  && a == Ty_record);
+	bool Record_or_Array_equal = (a == Ty_record || a == Ty_array) && a == b;
+	bool Normal_equal = a != Ty_record && b != Ty_array && a == b;
+	return Record_equal_nil || Record_or_Array_equal || Normal_equal;
 }
 
 
