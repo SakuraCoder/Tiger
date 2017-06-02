@@ -208,8 +208,37 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table v, S_table t
 		if (!breakk) return expTy(Tr_noExp(), Ty_Void());
 		return expTy(Tr_breakExp(breakk), Ty_Void());
 	case A_forExp: {
-		EM_error(e->pos, "\nsome one said for is better than while\nmake them unhappy \nahahaha");
-		return expTy(Tr_noExp(), Ty_Int());
+
+			A_dec i = A_VarDec(e->pos, e->u.forr.var, NULL, e->u.forr.lo);
+			A_dec limit = A_VarDec(e->pos, S_Symbol("limit"), NULL, e->u.forr.hi);
+			A_dec test = A_VarDec(e->pos, S_Symbol("test"), NULL, A_IntExp(e->pos, 1));
+			A_exp testExp = A_VarExp(e->pos, A_SimpleVar(e->pos, S_Symbol("test")));
+			A_exp iExp = A_VarExp(e->pos, A_SimpleVar(e->pos, e->u.forr.var));
+			A_exp limitExp = A_VarExp(e->pos, A_SimpleVar(e->pos, S_Symbol("limit")));
+			A_exp increment = A_AssignExp(e->pos, 
+				A_SimpleVar(e->pos, e->u.forr.var),
+				A_OpExp(e->pos, A_plusOp, iExp, A_IntExp(e->pos, 1)));
+			A_exp setFalse = A_AssignExp(e->pos, 
+				A_SimpleVar(e->pos, S_Symbol("test")), A_IntExp(e->pos, 0));
+			/* The let expression we pass to this function */
+			A_exp letExp = A_LetExp(e->pos, 
+				A_DecList(i, A_DecList(limit, A_DecList(test, NULL))),
+				A_SeqExp(e->pos,
+					A_ExpList(
+						A_IfExp(e->pos,
+							A_OpExp(e->pos, A_leOp, e->u.forr.lo, e->u.forr.hi),
+							A_WhileExp(e->pos, testExp,
+								A_SeqExp(e->pos, 
+									A_ExpList(e->u.forr.body,
+										A_ExpList(
+											A_IfExp(e->pos, 
+												A_OpExp(e->pos, A_ltOp, iExp, 
+													limitExp),
+												increment, setFalse), 
+											NULL)))), 
+							NULL),
+						NULL)));
+			return transExp(level, breakk, v, t,  letExp);
 	}
 	case A_letExp: {
 		A_decList decs;
@@ -288,19 +317,58 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table v, S_table t
 		}
 	}
 	case A_ifExp: {
-		struct expty final =  transExp(level, breakk, v, t, e->u.iff.test);
-		struct expty final2 = transExp(level, breakk, v, t, e->u.iff.then);
+		struct expty final, final2;
 		struct expty final3 = {NULL, NULL};
-		if (e->u.iff.elsee) { /*no else-part*/
-			final3 = transExp(level, breakk, v, t, e->u.iff.elsee);
-			if (final.ty->kind != Ty_int){
-				EM_error(e->u.iff.test->pos, "int required");
-			} 
-			if(!ty_match(final2.ty, final3.ty)) {
-				EM_error(e->pos, "if-else sentence must return same type");
+		A_exp test_exp = e->u.iff.test;
+		A_exp then_exp = e->u.iff.then;
+		A_exp else_exp = e->u.iff.elsee;
+
+		if(test_exp->kind == A_ifExp)
+		{
+			final2 = transExp(level, breakk, v, t, then_exp);
+			if(else_exp)
+			{
+				final3 = transExp(level, breakk, v, t, else_exp);
+			}
+
+			if(test_exp->u.iff.then->kind == A_intExp && test_exp->u.iff.then->u.intt == 1) // or
+			{
+				struct expty single_test = transExp(level, breakk, v, t, test_exp->u.iff.elsee); //single test
+				A_exp newtest = A_IfExp(test_exp->pos, test_exp->u.iff.test, then_exp, else_exp);
+				struct expty multi_test = transExp(level, breakk, v, t, newtest); //single test
+
+                return expTy(Tr_ifExp(single_test.exp, final2.exp, multi_test.exp), final2.ty);
+			}
+			else if(test_exp->u.iff.elsee->kind == A_intExp && test_exp->u.iff.elsee->u.intt == 0)
+			{
+				struct expty single_test = transExp(level, breakk, v, t, test_exp->u.iff.then); //single test
+				A_exp newtest = A_IfExp(test_exp->pos, test_exp->u.iff.test, then_exp, else_exp);
+				struct expty multi_test = transExp(level, breakk, v, t, newtest); //single test
+
+                return expTy(Tr_ifExp(single_test.exp,  multi_test.exp, final3.exp), final3.ty);
 			}
 		}
-		return expTy(Tr_ifExp(final.exp, final2.exp, final3.exp), final2.ty);
+		else
+		{
+			final =  transExp(level, breakk, v, t, test_exp);
+			final2 = transExp(level, breakk, v, t, then_exp);
+			if(else_exp)
+			{
+				final3 = transExp(level, breakk, v, t, else_exp);
+
+				if (final.ty->kind != Ty_int){
+					EM_error(e->u.iff.test->pos, "int required");
+				} 
+				/*
+				if(!ty_match(final2.ty, final3.ty)) {
+					EM_error(e->pos, "if-else sentence must return same type");
+				}
+				*/
+			}
+			return expTy(Tr_ifExp(final.exp, final2.exp, final3.exp), final2.ty);
+		}
+		
+		
 	}
 	case A_stringExp:
 		return expTy(Tr_stringExp(e->u.stringg), Ty_String());
