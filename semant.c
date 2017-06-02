@@ -95,13 +95,17 @@ static struct expty transVar(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 		{
 			int Offset = 0;
 			Ty_fieldList fieldList;
-			for (fieldList = ExpTy.ty->u.record; fieldList; fieldList = fieldList->tail, Offset++)
+			fieldList = ExpTy.ty->u.record;
+			while(fieldList)
 			{
 				if (fieldList->head->name == v->u.field.sym) 
 				{
 					Var = Tr_fieldVar(ExpTy.exp, Offset);
 					return expTy(Var, actual_ty(fieldList->head->ty));
 				}
+
+				fieldList = fieldList->tail;
+				Offset++;
 			}
 			EM_error(v->pos, "Can't find field \'%s\' in record type", S_name(v->u.field.sym));
 			break;
@@ -166,9 +170,12 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 			A_expList Arguments = NULL;
 			Tr_expList ArgumentList = NULL;
 			Ty_tyList formalList = FunCall->u.fun.formals;
-			for (Arguments = e->u.call.args; Arguments; Arguments = Arguments->tail)
+			Arguments = e->u.call.args; 
+			while (Arguments)
+			{				
 				Tr_expList_prepend(transExp(level, breakk, venv, tenv, Arguments->head).exp, &ArgumentList);
-
+				Arguments = Arguments->tail;
+			}
 			Exp = Tr_callExp(FunCall->u.fun.label, FunCall->u.fun.level, level, &ArgumentList);						
 			Arguments = e->u.call.args;
 
@@ -317,8 +324,13 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 				Tr_expList RecordExpList = NULL;
 				int Offset = 0;
 				fieldList = e->u.record.fields;
-				for (fieldList = e->u.record.fields; fieldList; fieldList = fieldList->tail, Offset++)
+				fieldList = e->u.record.fields;
+				while (fieldList)
+				{
 					Tr_expList_prepend(transExp(level, breakk, venv, tenv, fieldList->head->exp).exp, &RecordExpList);
+					fieldList = fieldList->tail;
+					Offset++;
+				}
 				return expTy(Tr_recordExp(Offset, RecordExpList), recordTy);
 			}
 		}
@@ -333,10 +345,11 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 		/*Void sequence*/
 		if (!SeqExpList)
 			return expTy(Tr_noExp(), Ty_Void());
-		for (; SeqExpList; SeqExpList = SeqExpList->tail)
+		while (SeqExpList)
 		{
 			SeqExpTy = transExp(level, breakk, venv, tenv, SeqExpList->head);
 			Tr_expList_prepend(SeqExpTy.exp, &Seq_TyList);
+			SeqExpList = SeqExpList->tail;
 		}
 
 		return expTy(Tr_seqExp(Seq_TyList), SeqExpTy.ty);
@@ -348,10 +361,10 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 		/*
 		if(e->u.assign.exp->kind == A_ifExp)
 		{
-			A_exp then_exp = A_AssignExp(e->pos, e->u.assign.var, A_IntExp(e->pos, 1));
-			A_exp else_exp = A_AssignExp(e->pos, e->u.assign.var, A_IntExp(e->pos, 0));
+			A_exp thenExp = A_AssignExp(e->pos, e->u.assign.var, A_IntExp(e->pos, 1));
+			A_exp elseExp = A_AssignExp(e->pos, e->u.assign.var, A_IntExp(e->pos, 0));
 
-			A_exp newtest = A_IfExp(e->pos, e->u.assign.exp, then_exp, else_exp);
+			A_exp newtest = A_IfExp(e->pos, e->u.assign.exp, thenExp, elseExp);
 			return transExp(level, breakk, v, t, newtest); //single test
 		}
 		*/
@@ -360,29 +373,26 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 
 		return expTy(Tr_assignExp(assignVar.exp, AssignExp.exp), Ty_Void());
 	}
-	case A_ifExp: 
+	case A_ifExp:
 	{
-		struct expty final, final2;
-		struct expty final3 = expTy(Tr_noExp(), Ty_Void());
+		struct expty testExpTy, thenExpTy;
+		struct expty elseExpTy = { NULL, NULL };
 		A_exp test_exp = e->u.iff.test;
 		A_exp then_exp = e->u.iff.then;
 		A_exp else_exp = e->u.iff.elsee;
 
 		if (test_exp->kind == A_ifExp)
 		{
-			final2 = transExp(level, breakk, venv, tenv, then_exp);
+			thenExpTy = transExp(level, breakk, venv, tenv, then_exp);
 			if (else_exp)
-			{
-				final3 = transExp(level, breakk, venv, tenv, else_exp);
-			}
-
+				elseExpTy = transExp(level, breakk, venv, tenv, else_exp);
 			if (test_exp->u.iff.then->kind == A_intExp && test_exp->u.iff.then->u.intt == 1) // or
 			{
 				struct expty single_test = transExp(level, breakk, venv, tenv, test_exp->u.iff.elsee); //single test
 				A_exp newtest = A_IfExp(test_exp->pos, test_exp->u.iff.test, then_exp, else_exp);
 				struct expty multi_test = transExp(level, breakk, venv, tenv, newtest); //single test
 
-				return expTy(Tr_ifExp(single_test.exp, final2.exp, multi_test.exp), final2.ty);
+				return expTy(Tr_ifExp(single_test.exp, thenExpTy.exp, multi_test.exp), thenExpTy.ty);
 			}
 			else if (test_exp->u.iff.elsee->kind == A_intExp && test_exp->u.iff.elsee->u.intt == 0)
 			{
@@ -390,107 +400,112 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 				A_exp newtest = A_IfExp(test_exp->pos, test_exp->u.iff.test, then_exp, else_exp);
 				struct expty multi_test = transExp(level, breakk, venv, tenv, newtest); //single test
 
-				return expTy(Tr_ifExp(single_test.exp, multi_test.exp, final3.exp), final3.ty);
+				return expTy(Tr_ifExp(single_test.exp, multi_test.exp, elseExpTy.exp), elseExpTy.ty);
 			}
 		}
 		else
 		{
-			final = transExp(level, breakk, venv, tenv, test_exp);
-			final2 = transExp(level, breakk, venv, tenv, then_exp);
+			testExpTy = transExp(level, breakk, venv, tenv, test_exp);
+			thenExpTy = transExp(level, breakk, venv, tenv, then_exp);
 			if (else_exp)
 			{
-				final3 = transExp(level, breakk, venv, tenv, else_exp);
-
-				if (final.ty->kind != Ty_int) {
-					EM_error(e->u.iff.test->pos, "int required");
+				elseExpTy = transExp(level, breakk, venv, tenv, else_exp);
+				if (testExpTy.ty->kind != Ty_int)
+				{
+					EM_error(e->u.iff.test->pos, "Test is required to be int type.");
+					return expTy(Tr_noExp(), Ty_Void());
 				}
 			}
-			return expTy(Tr_ifExp(final.exp, final2.exp, final3.exp), final2.ty);
+			return expTy(Tr_ifExp(testExpTy.exp, thenExpTy.exp, elseExpTy.exp), thenExpTy.ty);
 		}
 	}
-	case A_whileExp: {
-		struct expty final = transExp(level, breakk, venv, tenv, e->u.whilee.test);
-		if (final.ty->kind != Ty_int) {
-			EM_error(e->pos, "int required");
-		}
-		Tr_exp done = Tr_doneExp();
-		struct expty body = transExp(level, done, venv, tenv, e->u.whilee.body);
-		return expTy(Tr_whileExp(final.exp, body.exp, done), Ty_Void());
+	case A_whileExp: 
+	{
+		struct expty whileExpTy = transExp(level, breakk, venv, tenv, e->u.whilee.test);
+		if (whileExpTy.ty->kind != Ty_int)
+			EM_error(e->pos, "While test should be int type.");
+		return expTy(Tr_whileExp(whileExpTy.exp, 
+								 transExp(level, Tr_doneExp(), venv, tenv, e->u.whilee.body).exp,
+								 Tr_doneExp()),
+					 Ty_Void());
 	}
-	case A_forExp: {
+	case A_forExp: 
+	{
+		/*Transform for into while*/
+		A_dec i_Dec			= A_VarDec(e->pos, e->u.forr.var,	   NULL, e->u.forr.lo);
+		A_dec limit_Dec		= A_VarDec(e->pos, S_Symbol("limit"), NULL, e->u.forr.hi);
+		A_dec test_Dec		= A_VarDec(e->pos, S_Symbol("test"),  NULL, A_IntExp(e->pos, 1));
+		A_decList for_Dec	= A_DecList(i_Dec, A_DecList(limit_Dec, A_DecList(test_Dec, NULL)));
 
-		A_dec i = A_VarDec(e->pos, e->u.forr.var, NULL, e->u.forr.lo);
-		A_dec limit = A_VarDec(e->pos, S_Symbol("limit"), NULL, e->u.forr.hi);
-		A_dec test = A_VarDec(e->pos, S_Symbol("test"), NULL, A_IntExp(e->pos, 1));
-		A_exp testExp = A_VarExp(e->pos, A_SimpleVar(e->pos, S_Symbol("test")));
-		A_exp iExp = A_VarExp(e->pos, A_SimpleVar(e->pos, e->u.forr.var));
-		A_exp limitExp = A_VarExp(e->pos, A_SimpleVar(e->pos, S_Symbol("limit")));
-		A_exp increment = A_AssignExp(e->pos,
-			A_SimpleVar(e->pos, e->u.forr.var),
-			A_OpExp(e->pos, A_plusOp, iExp, A_IntExp(e->pos, 1)));
-		A_exp setFalse = A_AssignExp(e->pos,
-			A_SimpleVar(e->pos, S_Symbol("test")), A_IntExp(e->pos, 0));
-		/* The let expression we pass to this function */
-		A_exp letExp = A_LetExp(e->pos,
-			A_DecList(i, A_DecList(limit, A_DecList(test, NULL))),
-			A_SeqExp(e->pos,
-				A_ExpList(
-					A_IfExp(e->pos,
-						A_OpExp(e->pos, A_leOp, e->u.forr.lo, e->u.forr.hi),
-						A_WhileExp(e->pos, testExp,
-							A_SeqExp(e->pos,
-								A_ExpList(e->u.forr.body,
-									A_ExpList(
-										A_IfExp(e->pos,
-											A_OpExp(e->pos, A_ltOp, iExp,
-												limitExp),
-											increment, setFalse),
-										NULL)))),
-						NULL),
-					NULL)));
-		return transExp(level, breakk, venv, tenv, letExp);
+		A_exp i_Exp			 = A_VarExp(	e->pos, A_SimpleVar(e->pos, e->u.forr.var));
+		A_exp then_Exp		 = A_AssignExp(	e->pos, A_SimpleVar(e->pos, e->u.forr.var), A_OpExp(e->pos, A_plusOp, i_Exp, A_IntExp(e->pos, 1)));
+		A_exp limit_Exp		 = A_VarExp(	e->pos, A_SimpleVar(e->pos, S_Symbol("limit")));
+		A_exp else_Exp		 = A_AssignExp( e->pos, A_SimpleVar(e->pos, S_Symbol("test")), A_IntExp(e->pos, 0));
+		A_exp limit_test_Exp = A_IfExp(		e->pos, A_OpExp(	e->pos, A_ltOp, i_Exp, limit_Exp), then_Exp, else_Exp);
+		A_exp forSeq_Exp	 = A_SeqExp(	e->pos, A_ExpList(	e->u.forr.body, A_ExpList(limit_test_Exp, NULL)));
+		A_exp test_Exp		 = A_VarExp(	e->pos, A_SimpleVar(e->pos, S_Symbol("test")));
+		A_exp while_Exp		 = A_WhileExp(	e->pos, test_Exp, forSeq_Exp);
+		A_exp if_Exp		 = A_IfExp(		e->pos, A_OpExp(e->pos, A_leOp, e->u.forr.lo, e->u.forr.hi), while_Exp, NULL);
+		A_exp ifSeq_Exp		 = A_SeqExp(	e->pos, A_ExpList(if_Exp, NULL));
+		A_exp letExp		 = A_LetExp(	e->pos, for_Dec, ifSeq_Exp);
+		
+		return transExp(level, breakk, venv, tenv, letExp);		
 	}
 	case A_breakExp:
-		if (!breakk) return expTy(Tr_noExp(), Ty_Void());
-		return expTy(Tr_breakExp(breakk), Ty_Void());	
-	case A_letExp: {
-		A_decList decs;
+	{
+		if (!breakk) 
+			return expTy(Tr_noExp(), Ty_Void());
+		else 
+			return expTy(Tr_breakExp(breakk), Ty_Void());
+	}
+	case A_letExp: 
+	{
+		A_decList decList = e->u.let.decs;
 		Tr_expList l = NULL;
 		S_beginScope(venv);
 		S_beginScope(tenv);
-		for (decs = e->u.let.decs; decs; decs = decs->tail) {
-			Tr_expList_prepend(transDec(level, breakk, venv, tenv, decs->head), &l);
+
+		while (decList)
+		{
+			Tr_expList_prepend(transDec(level, breakk, venv, tenv, decList->head), &l);
+			decList = decList->tail;
 		}
-		struct expty final = transExp(level, breakk, venv, tenv, e->u.let.body);
-		Tr_expList_prepend(final.exp, &l);
+		struct expty letBodyExpTy = transExp(level, breakk, venv, tenv, e->u.let.body);
+		Tr_expList_prepend(letBodyExpTy.exp, &l);
+
 		S_endScope(venv);
 		S_endScope(tenv);
-		if (level->parent == NULL) // 是否在最外层
+
+		if (level->parent == NULL)
 			Tr_procEntryExit(level, Tr_seqExp(l), Tr_formals(level));
-		return expTy(Tr_seqExp(l), final.ty);
+
+		return expTy(Tr_seqExp(l), letBodyExpTy.ty);
 	}
-	case A_arrayExp: {/*array create*/
-		Ty_ty arrayty = actual_ty(S_look(tenv, e->u.array.typ));
-		if (!arrayty) {
-			EM_error(e->pos, "undeined array type \'%s\'", S_name(e->u.array.typ));
-			return expTy(Tr_noExp(), Ty_Int());
+	case A_arrayExp:
+	{
+		Ty_ty arrayTy = actual_ty(S_look(tenv, e->u.array.typ));
+		if (!arrayTy)
+		{
+			EM_error(e->pos, "Array type \'%s\' is undefined!", S_name(e->u.array.typ));
 		}
-		if (arrayty->kind != Ty_array) {
-			EM_error(e->pos, "\'%s\' is not a array type", S_name(e->u.array.typ));
-			return expTy(Tr_noExp(), Ty_Int());
+		else if (arrayTy->kind != Ty_array)
+		{
+			EM_error(e->pos, "\'%s\' is not a array type!", S_name(e->u.array.typ));
 		}
-	    struct expty final2 = transExp(level, breakk, venv, tenv, e->u.array.size);
-		struct expty final3 = transExp(level, breakk, venv, tenv, e->u.array.init);
-		if (final2.ty->kind != Ty_int) {
-			EM_error(e->pos, "array size should be int \'%s\'", S_name(e->u.array.typ));
-		} else if (!equal_ty(final3.ty, arrayty->u.array)){
-			EM_error(e->pos, "unmatched array type in \'%s\'", S_name(e->u.array.typ));
-		} else {	
-			return expTy(Tr_arrayExp(final2.exp, final3.exp), arrayty);
+		else
+		{
+			struct expty sizeExpTy = transExp(level, breakk, venv, tenv, e->u.array.size);
+			struct expty initExpTy = transExp(level, breakk, venv, tenv, e->u.array.init);
+			if (sizeExpTy.ty->kind != Ty_int)
+				EM_error(e->pos, "Array size \'%s\' should be int type!", S_name(e->u.array.typ));
+			else if (!equal_ty(initExpTy.ty, arrayTy->u.array))
+				EM_error(e->pos, "Array type \'%s\' doesn't match!", S_name(e->u.array.typ));
+			else
+				return expTy(Tr_arrayExp(sizeExpTy.exp, initExpTy.exp), arrayTy);
 		}
+		/*return of error*/
 		return expTy(Tr_noExp(), Ty_Int());
-	}
-	
+	}	
 	default:
 		assert(0);
 	}
@@ -633,17 +648,9 @@ static bool equal_ty(Ty_ty ty_a, Ty_ty ty_b)
 	bool Record_equal_nil = (a == Ty_nil && b == Ty_record) || (b == Ty_nil  && a == Ty_record);
 	bool Record_or_Array_equal = (a == Ty_record || a == Ty_array) && a == b;
 	bool Normal_equal = a != Ty_record && b != Ty_array && a == b;
+
 	return Record_equal_nil || Record_or_Array_equal || Normal_equal;
 }
-
-
-
-
-
-
-
-
-
 
 
 
