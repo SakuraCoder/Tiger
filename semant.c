@@ -198,6 +198,16 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table v, S_table t
 	}
 	case A_assignExp: {
 		struct expty final4 = transVar(level, breakk, v, t, e->u.assign.var);
+		/*
+		if(e->u.assign.exp->kind == A_ifExp)
+		{
+			A_exp then_exp = A_AssignExp(e->pos, e->u.assign.var, A_IntExp(e->pos, 1));
+			A_exp else_exp = A_AssignExp(e->pos, e->u.assign.var, A_IntExp(e->pos, 0));
+
+			A_exp newtest = A_IfExp(e->pos, e->u.assign.exp, then_exp, else_exp);
+			return transExp(level, breakk, v, t, newtest); //single test
+		}
+		*/
 		struct expty final5 = transExp(level, breakk, v, t, e->u.assign.exp);
 		if (!ty_match(final4.ty, final5.ty)) {
 			EM_error(e->pos, "unmatched assign exp");
@@ -470,10 +480,6 @@ static Tr_exp transDec(Tr_level level, Tr_exp breakk, S_table v, S_table t, A_de
 				if (resTy->kind != Ty_name) {
 					iscyl = FALSE;
 				}
-			}
-			if (!nl->tail && resTy->kind != Ty_name && isset) {
-				/*line num is some bug*/
-				EM_error(d->pos,"warning: actual type should declare brefore nameTy type");
 			}
 			namety = S_look(t, nl->head->name);
 			namety->u.name.ty = resTy;

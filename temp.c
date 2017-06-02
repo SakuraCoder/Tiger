@@ -30,7 +30,7 @@ Temp_label Temp_namedlabel(string s)
 {return S_Symbol(s);
 }
 
-static int temps = 100;
+static int temps = 0;
 
 Temp_temp Temp_newtemp(void)
 {Temp_temp p = (Temp_temp) checked_malloc(sizeof (*p));
