@@ -41,8 +41,10 @@ int main(int argc, char **argv) {
 	FILE * f1 = fopen("1.txt", "w");
 	FILE * f2 = fopen("2.txt", "w");
 	if (temp) {
+		pr_exp(f2, temp, 0);
 		F_fragList fl = SEM_transProg(temp);
 		print_frag(fl, f1);
+
 	}
 	fclose(f1);
 	fclose(f2);

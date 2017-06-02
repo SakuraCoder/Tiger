@@ -345,6 +345,16 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 	{
 		struct expty assignVar = transVar(level, breakk, venv, tenv, e->u.assign.var);
 		struct expty AssignExp = transExp(level, breakk, venv, tenv, e->u.assign.exp);
+		/*
+		if(e->u.assign.exp->kind == A_ifExp)
+		{
+			A_exp then_exp = A_AssignExp(e->pos, e->u.assign.var, A_IntExp(e->pos, 1));
+			A_exp else_exp = A_AssignExp(e->pos, e->u.assign.var, A_IntExp(e->pos, 0));
+
+			A_exp newtest = A_IfExp(e->pos, e->u.assign.exp, then_exp, else_exp);
+			return transExp(level, breakk, v, t, newtest); //single test
+		}
+		*/
 		if (!equal_ty(assignVar.ty, AssignExp.ty)) 
 			EM_error(e->pos, "Types of left and right side of assignment do not match!");
 
