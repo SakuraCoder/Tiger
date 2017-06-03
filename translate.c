@@ -284,7 +284,8 @@ Tr_exp Tr_fieldVar(Tr_exp base, int offset)
 Tr_exp Tr_subscriptVar(Tr_exp base, Tr_exp index) 
 {
 	T_exp addr = T_Binop(T_plus, unEx(base), T_Binop(T_mul, unEx(index), T_Const(F_WORD_SIZE)));
-	T_exp value = T_Mem(addr);
+	T_exp newaddr = T_Binop(T_plus, addr, T_Const(0));
+	T_exp value = T_Mem(newaddr);
 	return Tr_Ex(value);
 }
 
