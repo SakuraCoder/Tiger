@@ -31,7 +31,7 @@ struct expty expTy(Tr_exp exp, Ty_ty ty)
 static struct expty transVar(Tr_level level, Tr_exp breakk, S_table venv, S_table tenv, A_var v);
 static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_table tenv, A_exp e);
 static		 Tr_exp transDec(Tr_level level, Tr_exp breakk, S_table venv, S_table tenv, A_dec d);
-static		  Ty_ty transTy(S_table tenv, A_ty  t);
+static		  Ty_ty transTy	(								S_table tenv,				A_ty  t);
 /*-----------------------------------------------------------------------------------------------------*/
 /*Functions Within the module*/
 
@@ -54,7 +54,6 @@ static bool equal_ty(Ty_ty ty_a, Ty_ty ty_b)
 
 	return Record_equal_nil || Record_or_Array_equal || Normal_equal;
 }
-
 
 static Ty_fieldList makeFieldTys(S_table, A_fieldList); /*may use #define*/
 
@@ -373,16 +372,6 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 	{
 		struct expty assignVar = transVar(level, breakk, venv, tenv, e->u.assign.var);
 		struct expty AssignExp = transExp(level, breakk, venv, tenv, e->u.assign.exp);
-		/*
-		if(e->u.assign.exp->kind == A_ifExp)
-		{
-		A_exp thenExp = A_AssignExp(e->pos, e->u.assign.var, A_IntExp(e->pos, 1));
-		A_exp elseExp = A_AssignExp(e->pos, e->u.assign.var, A_IntExp(e->pos, 0));
-
-		A_exp newtest = A_IfExp(e->pos, e->u.assign.exp, thenExp, elseExp);
-		return transExp(level, breakk, v, t, newtest); //single test
-		}
-		*/
 		if (!equal_ty(assignVar.ty, AssignExp.ty))
 			EM_error(e->pos, "Types of left and right side of assignment do not match!");
 
@@ -447,24 +436,24 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 	case A_forExp:
 	{
 		/*Transform for into while*/
-		A_dec i_Dec = A_VarDec(e->pos, e->u.forr.var, NULL, e->u.forr.lo);
-		A_dec limit_Dec = A_VarDec(e->pos, S_Symbol("limit"), NULL, e->u.forr.hi);
-		A_dec test_Dec = A_VarDec(e->pos, S_Symbol("test"), NULL, A_IntExp(e->pos, 1));
+		A_dec		i_Dec = A_VarDec(e->pos, e->u.forr.var,		NULL, e->u.forr.lo);
+		A_dec	limit_Dec = A_VarDec(e->pos, S_Symbol("limit"), NULL, e->u.forr.hi);
+		A_dec	 test_Dec = A_VarDec(e->pos, S_Symbol("test"),	NULL, A_IntExp(e->pos, 1));
 		A_decList for_Dec = A_DecList(i_Dec, A_DecList(limit_Dec, A_DecList(test_Dec, NULL)));
 
-		A_exp i_Exp = A_VarExp(e->pos, A_SimpleVar(e->pos, e->u.forr.var));
-		A_exp then_Exp = A_AssignExp(e->pos, A_SimpleVar(e->pos, e->u.forr.var), A_OpExp(e->pos, A_plusOp, i_Exp, A_IntExp(e->pos, 1)));
-		A_exp limit_Exp = A_VarExp(e->pos, A_SimpleVar(e->pos, S_Symbol("limit")));
-		A_exp else_Exp = A_AssignExp(e->pos, A_SimpleVar(e->pos, S_Symbol("test")), A_IntExp(e->pos, 0));
-		A_exp limit_test_Exp = A_IfExp(e->pos, A_OpExp(e->pos, A_ltOp, i_Exp, limit_Exp), then_Exp, else_Exp);
-		A_exp forSeq_Exp = A_SeqExp(e->pos, A_ExpList(e->u.forr.body, A_ExpList(limit_test_Exp, NULL)));
-		A_exp test_Exp = A_VarExp(e->pos, A_SimpleVar(e->pos, S_Symbol("test")));
-		A_exp while_Exp = A_WhileExp(e->pos, test_Exp, forSeq_Exp);
-		A_exp if_Exp = A_IfExp(e->pos, A_OpExp(e->pos, A_leOp, e->u.forr.lo, e->u.forr.hi), while_Exp, NULL);
-		A_exp ifSeq_Exp = A_SeqExp(e->pos, A_ExpList(if_Exp, NULL));
-		A_exp letExp = A_LetExp(e->pos, for_Dec, ifSeq_Exp);
+		A_exp i_Exp			 = A_VarExp	  (e->pos, A_SimpleVar(e->pos, e->u.forr.var));
+		A_exp then_Exp		 = A_AssignExp(e->pos, A_SimpleVar(e->pos, e->u.forr.var), A_OpExp(e->pos, A_plusOp, i_Exp, A_IntExp(e->pos, 1)));
+		A_exp limit_Exp		 = A_VarExp	  (e->pos, A_SimpleVar(e->pos, S_Symbol("limit")));
+		A_exp else_Exp		 = A_AssignExp(e->pos, A_SimpleVar(e->pos, S_Symbol("test")), A_IntExp(e->pos, 0));
+		A_exp limit_test_Exp = A_IfExp	  (e->pos, A_OpExp	  (e->pos, A_ltOp, i_Exp, limit_Exp), then_Exp, else_Exp);
+		A_exp forSeq_Exp	 = A_SeqExp	  (e->pos, A_ExpList  (e->u.forr.body, A_ExpList(limit_test_Exp, NULL)));
+		A_exp test_Exp		 = A_VarExp	  (e->pos, A_SimpleVar(e->pos, S_Symbol("test")));
+		A_exp while_Exp		 = A_WhileExp (e->pos, test_Exp, forSeq_Exp);
+		A_exp if_Exp		 = A_IfExp	  (e->pos, A_OpExp	  (e->pos, A_leOp, e->u.forr.lo, e->u.forr.hi), while_Exp, NULL);
+		A_exp ifSeq_Exp		 = A_SeqExp	  (e->pos, A_ExpList(if_Exp, NULL));
+		A_exp let_Exp		 = A_LetExp	  (e->pos, for_Dec, ifSeq_Exp);
 
-		return transExp(level, breakk, venv, tenv, letExp);
+		return transExp(level, breakk, venv, tenv, let_Exp);
 	}
 	case A_breakExp:
 	{
@@ -477,6 +466,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 	{
 		A_decList decList = e->u.let.decs;
 		Tr_expList expList = NULL;
+
 		S_beginScope(venv);
 		S_beginScope(tenv);
 
@@ -525,22 +515,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 		assert(0);
 	}
 }
-
 static		 Tr_exp transDec(Tr_level level, Tr_exp breakk, S_table venv, S_table tenv, A_dec d){
-
-	Ty_ty resultTy;
-
-
-
-
-	struct expty final;
-	Ty_ty namety, isname;
-	Ty_tyList s;
-	A_nametyList nl;
-	E_enventry fun;
-	int iscyl, isset;
-	Tr_access ac;
-
 	switch (d->kind) 
 	{
 	case A_functionDec:
@@ -548,6 +523,7 @@ static		 Tr_exp transDec(Tr_level level, Tr_exp breakk, S_table venv, S_table te
 		A_fundecList fundecList = d->u.function;
 		A_fieldList paramFieldList;
 		Ty_tyList formalTyLists;
+		Ty_ty resultTy;
 		while (fundecList)
 		{			
 /*--------------------------------------Examine return type------------------------------------------*/
@@ -612,145 +588,147 @@ static		 Tr_exp transDec(Tr_level level, Tr_exp breakk, S_table venv, S_table te
 			fundecList = fundecList->tail;
 		}
 /*--------------------------------------Function body part--------------------------------------------------*/
+		Ty_tyList formalTy;
 		fundecList = d->u.function;
 		while (fundecList)
 		{
-			fundecList->head = fundecList->head;
-			E_enventry funEntry = S_look(venv, fundecList->head->name); /*get fun-info*/
+			E_enventry funEntry = S_look(venv, fundecList->head->name);
+			/*-----------------------------------S_beginScope---------------------------------------------*/
 			S_beginScope(venv);
-			formalTyLists = funEntry->u.fun.formals;/*Ty-list should get from venv*/
-													/*add params-name to venv*/
-			Tr_accessList acls = Tr_formals(funEntry->u.fun.level);
+			formalTyLists = funEntry->u.fun.formals;
+			formalTy = formalTyLists;
 			paramFieldList = fundecList->head->params;
-			s = formalTyLists;
-			while (paramFieldList && s && acls)
+			Tr_accessList accessList = Tr_formals(funEntry->u.fun.level);
+			struct expty bodyExpTy;
+			while (accessList && paramFieldList && formalTy)
 			{
-				S_enter(venv, paramFieldList->head->name, E_VarEntry(acls->head, s->head));
+				S_enter(venv, paramFieldList->head->name, E_VarEntry(accessList->head, formalTy->head));
+				accessList = accessList->tail;
 				paramFieldList = paramFieldList->tail;
-				s = s->tail;
-				acls = acls->tail;
+				formalTy = formalTy->tail;
 			}
-			final = transExp(funEntry->u.fun.level, breakk, venv, tenv, fundecList->head->body);
-			fun = S_look(venv, fundecList->head->name);
-			if (!equal_ty(fun->u.fun.result, final.ty)) {/*check return type is match body type*/
-				EM_error(fundecList->head->pos, "incorrect return type in function '%s'", S_name(fundecList->head->name));
-			}
-			Tr_procEntryExit(funEntry->u.fun.level, final.exp, acls);
+			E_enventry funName = S_look(venv, fundecList->head->name);
+			bodyExpTy = transExp(funEntry->u.fun.level, breakk, venv, tenv, fundecList->head->body);
+			if (!equal_ty(funName->u.fun.result, bodyExpTy.ty))
+				EM_error(fundecList->head->pos, "Return type of function \'%s\' is incorrect.", S_name(fundecList->head->name));
+			Tr_procEntryExit(funEntry->u.fun.level, bodyExpTy.exp, accessList);
 			S_endScope(venv);
+			/*--------------------------------------S_endScope------------------------------------------*/
 			fundecList = fundecList->tail;
 		}
 		return Tr_noExp();
 	}
 	case A_varDec:
 	{
-
-		final = transExp(level, breakk, venv, tenv, d->u.var.init);
-		ac = Tr_allocLocal(level, d->u.var.escape);
+		struct expty initExpTy = transExp(level, breakk, venv, tenv, d->u.var.init);
+		Tr_access access = Tr_allocLocal(level, d->u.var.escape);
 		if (!d->u.var.typ)
-		{/*unpoint type*/
-			if (final.ty->kind == Ty_nil || final.ty->kind == Ty_void) {
-				/*why keep void type ???*/
-				EM_error(d->pos, "init should not be nil without type in %s", S_name(d->u.var.var));
-				S_enter(venv, d->u.var.var, E_VarEntry(ac, Ty_Int()));
+		{
+			if (initExpTy.ty->kind == Ty_nil || initExpTy.ty->kind == Ty_void)
+			{
+				EM_error(d->pos, "Initial type is invalid for \'%s\'", S_name(d->u.var.var));
+				S_enter(venv, d->u.var.var, E_VarEntry(access, Ty_Int()));
 			}
-			else {
-				S_enter(venv, d->u.var.var, E_VarEntry(ac, final.ty));
-			}
+			else 
+				S_enter(venv, d->u.var.var, E_VarEntry(access, initExpTy.ty));
 		}
-		else {
-			resultTy = S_look(tenv, d->u.var.typ);
-			if (!resultTy) {
-				EM_error(d->pos, "undifined type %s", S_name(d->u.var.typ));
+		else 
+		{
+			Ty_ty varTy = S_look(tenv, d->u.var.typ);
+			if (!varTy) 
+				EM_error(d->pos, "Type \'%s\' is undefined.", S_name(d->u.var.typ));
+			else if (!equal_ty(varTy, initExpTy.ty))
+			{
+				EM_error(d->pos, "Type \'%s\' doesn't match definition.", S_name(d->u.var.typ));
+				S_enter(venv, d->u.var.var, E_VarEntry(access, varTy));
 			}
-			else {
-				if (!equal_ty(resultTy, final.ty)) {
-					EM_error(d->pos, "unmatched type in %s", S_name(d->u.var.typ));
-					S_enter(venv, d->u.var.var, E_VarEntry(ac, resultTy));
-				}
-				else {
-					S_enter(venv, d->u.var.var, E_VarEntry(ac, resultTy));
-				}
-			}
+			else 
+				S_enter(venv, d->u.var.var, E_VarEntry(access, varTy));
 		}
-		return Tr_assignExp(Tr_simpleVar(ac, level), final.exp);
+		return Tr_assignExp(Tr_simpleVar(access, level), initExpTy.exp);
 	}
-		case A_typeDec:
+	case A_typeDec:
 	{
-		for (nl = d->u.type; nl; nl = nl->tail) {
-			S_enter(tenv, nl->head->name, Ty_Name(nl->head->name, NULL));
-		} /* add name to tenv, Ty_ty set NULL*/
-		iscyl = TRUE;
-		for (nl = d->u.type; nl; nl = nl->tail) {
-			resultTy = transTy(tenv, nl->head->ty);
-			if (iscyl) {
-				if (resultTy->kind != Ty_name) {
-					iscyl = FALSE;
-				}
-			}
-			namety = S_look(tenv, nl->head->name);
-			namety->u.name.ty = resultTy;
+		Ty_ty nameTy;
+		bool Cycle = TRUE;
+		A_nametyList typeList = d->u.type;
+		while (typeList)
+		{
+			S_enter(tenv, typeList->head->name, Ty_Name(typeList->head->name, NULL));
+			typeList = typeList->tail;
+		}			
+		typeList = d->u.type;
+		while (typeList)
+		{
+			Ty_ty typeTy = transTy(tenv, typeList->head->ty);
+			if (Cycle && typeTy->kind != Ty_name)
+				Cycle = FALSE;
+			nameTy = S_look(tenv, typeList->head->name);
+			nameTy->u.name.ty = typeTy;
+			typeList = typeList->tail;
 		}
-		if (iscyl) EM_error(d->pos, "illegal type cycle: cycle must contain record, array");
+		if (Cycle)
+			EM_error(d->pos, "Illegal Cycle.");
 		return Tr_noExp();
 	}
 	default:
 		assert(0);
 	}
 }
-
-
-
-static		  Ty_ty transTy(S_table tenv, A_ty  t) {
-	Ty_ty final = NULL;
-	Ty_fieldList fieldTys;
-
-	switch (t->kind) {
+static		  Ty_ty transTy	(								S_table tenv,				A_ty  t)
+{
+	switch (t->kind)
+	{
 	case A_nameTy:
-		final = S_look(tenv, t->u.name);
-		if (!final) {
-			EM_error(t->pos, "undefined type %s", S_name(t->u.name));
+	{
+		Ty_ty nameTy = S_look(tenv, t->u.name);
+		if (!nameTy) 
+		{
+			EM_error(t->pos, "Type \'%s\' is undefined.", S_name(t->u.name));
 			return Ty_Int();
 		}
-		return final;
+		else 
+			return nameTy;
+
+	}
 	case A_recordTy:
-		fieldTys = makeFieldTys(tenv, t->u.record);
-		return Ty_Record(fieldTys);
+	{
+		A_fieldList recordFieldList = t->u.record;
+		Ty_fieldList TyList = NULL;
+		Ty_fieldList tyHead = NULL;
+		Ty_ty tyRecordHead;
+		Ty_field tempTy;
+		while (recordFieldList)
+		{
+			tyRecordHead = S_look(tenv, recordFieldList->head->typ);
+			if (!tyRecordHead)
+				EM_error(recordFieldList->head->pos, "Type \'%s\' is undefined.", S_name(recordFieldList->head->typ));
+			else
+			{
+				tempTy = Ty_Field(recordFieldList->head->name, tyRecordHead);
+				if (!TyList)
+				{
+					TyList = Ty_FieldList(tempTy, NULL);
+					tyHead = TyList;
+				}
+				else
+				{
+					TyList->tail = Ty_FieldList(tempTy, NULL);
+					TyList = TyList->tail;
+				}
+			}
+			recordFieldList = recordFieldList->tail;
+		}
+		return Ty_Record(tyHead);
+	}		
 	case A_arrayTy:
-		final = S_look(tenv, t->u.array);
-		if (!final) EM_error(t->pos, "undefined type %s", S_name(t->u.array));
-		return Ty_Array(final);
+	{
+		Ty_ty arrayTy = S_look(tenv, t->u.array);
+		if (!arrayTy)
+			EM_error(t->pos, "Type \'%s\' is undefined.", S_name(t->u.array));
+		return Ty_Array(arrayTy);
+	}
 	default:
 		assert(0);
 	}
 }
-
-
-
-
-static Ty_fieldList makeFieldTys(S_table t, A_fieldList fs) {
-	A_fieldList f;
-	Ty_fieldList tys = NULL, head;
-	Ty_ty ty;
-	Ty_field tmp;
-
-	for (f = fs; f; f = f->tail) {
-		ty = S_look(t, f->head->typ);
-		if (!ty) {
-			EM_error(f->head->pos, "undefined type %s", S_name(f->head->typ));
-		}
-		else {
-			tmp = Ty_Field(f->head->name, ty);
-			if (tys) {
-				tys->tail = Ty_FieldList(tmp, NULL);
-				tys = tys->tail;
-			}
-			else {
-				tys = Ty_FieldList(tmp, NULL);
-				head = tys;
-			}
-
-		}
-	}
-	return head;
-}
-
