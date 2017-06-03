@@ -31,7 +31,7 @@ struct expty expTy(Tr_exp exp, Ty_ty ty)
 static struct expty transVar(Tr_level level, Tr_exp breakk, S_table venv, S_table tenv, A_var v);
 static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_table tenv, A_exp e);
 static		 Tr_exp transDec(Tr_level level, Tr_exp breakk, S_table venv, S_table tenv, A_dec d);
-static		  Ty_ty transTy	(								S_table tenv,				A_ty  t);
+static		  Ty_ty transTy(S_table tenv, A_ty  t);
 /*-----------------------------------------------------------------------------------------------------*/
 /*Functions Within the module*/
 
@@ -57,7 +57,7 @@ static bool equal_ty(Ty_ty ty_a, Ty_ty ty_b)
 
 static Ty_fieldList makeFieldTys(S_table, A_fieldList); /*may use #define*/
 
-/*-----------------------------------------------------------------------------------------------------*/
+														/*-----------------------------------------------------------------------------------------------------*/
 
 F_fragList SEM_transProg(A_exp exp)
 {
@@ -409,7 +409,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 		}
 		else
 		{
-			Tr_access access = Tr_allocLocal(level, FALSE);	
+			Tr_access access = Tr_allocLocal(level, FALSE);
 			Tr_exp tmp = Tr_simpleVar(access, level);
 			Tr_exp assing_true = Tr_assignExp(tmp, Tr_intExp(1));
 			Tr_exp assing_false = Tr_assignExp(tmp, Tr_intExp(0));
@@ -430,9 +430,9 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 				thenExpTy = transExp(level, breakk, venv, tenv, then_exp); //single test
 				elseExpTy = transExp(level, breakk, venv, tenv, else_exp);
 
-				return expTy(Tr_eseqExp(Tr_ifExp(testExpTy.exp, Tr_ifExp(thenExpTy.exp, assing_true, assing_false), assing_false),tmp), elseExpTy.ty);
+				return expTy(Tr_eseqExp(Tr_ifExp(testExpTy.exp, Tr_ifExp(thenExpTy.exp, assing_true, assing_false), assing_false), tmp), elseExpTy.ty);
 			}
-            printf("reach3\n");
+			printf("reach3\n");
 			testExpTy = transExp(level, breakk, venv, tenv, test_exp);
 			thenExpTy = transExp(level, breakk, venv, tenv, then_exp);
 			if (else_exp)
@@ -447,9 +447,8 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 			return expTy(Tr_ifExp(testExpTy.exp, thenExpTy.exp, elseExpTy.exp), thenExpTy.ty);
 		}
 
-			
-	}
 
+	}
 	case A_whileExp:
 	{
 		struct expty whileExpTy = transExp(level, breakk, venv, tenv, e->u.whilee.test);
@@ -463,22 +462,22 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 	case A_forExp:
 	{
 		/*Transform for into while*/
-		A_dec		i_Dec = A_VarDec(e->pos, e->u.forr.var,		NULL, e->u.forr.lo);
+		A_dec		i_Dec = A_VarDec(e->pos, e->u.forr.var, NULL, e->u.forr.lo);
 		A_dec	limit_Dec = A_VarDec(e->pos, S_Symbol("limit"), NULL, e->u.forr.hi);
-		A_dec	 test_Dec = A_VarDec(e->pos, S_Symbol("test"),	NULL, A_IntExp(e->pos, 1));
+		A_dec	 test_Dec = A_VarDec(e->pos, S_Symbol("test"), NULL, A_IntExp(e->pos, 1));
 		A_decList for_Dec = A_DecList(i_Dec, A_DecList(limit_Dec, A_DecList(test_Dec, NULL)));
 
-		A_exp i_Exp			 = A_VarExp	  (e->pos, A_SimpleVar(e->pos, e->u.forr.var));
-		A_exp then_Exp		 = A_AssignExp(e->pos, A_SimpleVar(e->pos, e->u.forr.var), A_OpExp(e->pos, A_plusOp, i_Exp, A_IntExp(e->pos, 1)));
-		A_exp limit_Exp		 = A_VarExp	  (e->pos, A_SimpleVar(e->pos, S_Symbol("limit")));
-		A_exp else_Exp		 = A_AssignExp(e->pos, A_SimpleVar(e->pos, S_Symbol("test")), A_IntExp(e->pos, 0));
-		A_exp limit_test_Exp = A_IfExp	  (e->pos, A_OpExp	  (e->pos, A_ltOp, i_Exp, limit_Exp), then_Exp, else_Exp);
-		A_exp forSeq_Exp	 = A_SeqExp	  (e->pos, A_ExpList  (e->u.forr.body, A_ExpList(limit_test_Exp, NULL)));
-		A_exp test_Exp		 = A_VarExp	  (e->pos, A_SimpleVar(e->pos, S_Symbol("test")));
-		A_exp while_Exp		 = A_WhileExp (e->pos, test_Exp, forSeq_Exp);
-		A_exp if_Exp		 = A_IfExp	  (e->pos, A_OpExp	  (e->pos, A_leOp, e->u.forr.lo, e->u.forr.hi), while_Exp, NULL);
-		A_exp ifSeq_Exp		 = A_SeqExp	  (e->pos, A_ExpList(if_Exp, NULL));
-		A_exp let_Exp		 = A_LetExp	  (e->pos, for_Dec, ifSeq_Exp);
+		A_exp i_Exp = A_VarExp(e->pos, A_SimpleVar(e->pos, e->u.forr.var));
+		A_exp then_Exp = A_AssignExp(e->pos, A_SimpleVar(e->pos, e->u.forr.var), A_OpExp(e->pos, A_plusOp, i_Exp, A_IntExp(e->pos, 1)));
+		A_exp limit_Exp = A_VarExp(e->pos, A_SimpleVar(e->pos, S_Symbol("limit")));
+		A_exp else_Exp = A_AssignExp(e->pos, A_SimpleVar(e->pos, S_Symbol("test")), A_IntExp(e->pos, 0));
+		A_exp limit_test_Exp = A_IfExp(e->pos, A_OpExp(e->pos, A_ltOp, i_Exp, limit_Exp), then_Exp, else_Exp);
+		A_exp forSeq_Exp = A_SeqExp(e->pos, A_ExpList(e->u.forr.body, A_ExpList(limit_test_Exp, NULL)));
+		A_exp test_Exp = A_VarExp(e->pos, A_SimpleVar(e->pos, S_Symbol("test")));
+		A_exp while_Exp = A_WhileExp(e->pos, test_Exp, forSeq_Exp);
+		A_exp if_Exp = A_IfExp(e->pos, A_OpExp(e->pos, A_leOp, e->u.forr.lo, e->u.forr.hi), while_Exp, NULL);
+		A_exp ifSeq_Exp = A_SeqExp(e->pos, A_ExpList(if_Exp, NULL));
+		A_exp let_Exp = A_LetExp(e->pos, for_Dec, ifSeq_Exp);
 
 		return transExp(level, breakk, venv, tenv, let_Exp);
 	}
@@ -651,28 +650,30 @@ static		 Tr_exp transDec(Tr_level level, Tr_exp breakk, S_table venv, S_table te
 	{
 		struct expty initExpTy = transExp(level, breakk, venv, tenv, d->u.var.init);
 		Tr_access access = Tr_allocLocal(level, d->u.var.escape);
-		if (!d->u.var.typ)
-		{
-			if (initExpTy.ty->kind == Ty_nil || initExpTy.ty->kind == Ty_void)
-			{
-				EM_error(d->pos, "Initial type is invalid for \'%s\'", S_name(d->u.var.var));
-				S_enter(venv, d->u.var.var, E_VarEntry(access, Ty_Int()));
-			}
-			else 
-				S_enter(venv, d->u.var.var, E_VarEntry(access, initExpTy.ty));
-		}
-		else 
+		/*var with type decelaration, e.g.: var a:int := 0*/
+		if (d->u.var.typ)
 		{
 			Ty_ty varTy = S_look(tenv, d->u.var.typ);
-			if (!varTy) 
+			if (!varTy)
 				EM_error(d->pos, "Type \'%s\' is undefined.", S_name(d->u.var.typ));
 			else if (!equal_ty(varTy, initExpTy.ty))
 			{
 				EM_error(d->pos, "Type \'%s\' doesn't match definition.", S_name(d->u.var.typ));
 				S_enter(venv, d->u.var.var, E_VarEntry(access, varTy));
 			}
-			else 
-				S_enter(venv, d->u.var.var, E_VarEntry(access, varTy));
+			else
+				S_enter(venv, d->u.var.var, E_VarEntry(access, varTy));			
+		}
+		/*var with our type decelaration, e.g.: var a:= 0.*/
+		else 
+		{
+			if (initExpTy.ty->kind == Ty_void || initExpTy.ty->kind == Ty_nil)
+			{
+				EM_error(d->pos, "Initial value type is invalid for \'%s\'", S_name(d->u.var.var));
+				S_enter(venv, d->u.var.var, E_VarEntry(access, Ty_Int()));
+			}
+			else
+				S_enter(venv, d->u.var.var, E_VarEntry(access, initExpTy.ty));
 		}
 		return Tr_assignExp(Tr_simpleVar(access, level), initExpTy.exp);
 	}
