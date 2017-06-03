@@ -3,7 +3,7 @@
 #include "absyn.h"
 #include "y.tab.h"
 #include "errormsg.h"
-#define BUFSIZE 65536
+#define BUFSIZE 65535
 
 int charPos = 1;
 char strbuf[BUFSIZE+1];
@@ -12,14 +12,14 @@ unsigned int strLen = 0;
 
 int yywrap(void)
 {
-    charPos=1;
+    charPos = 1;
     return 1;
 }
 
 void setup(void)
 {
-    *strbuf = '\0';
     strLen = 0;
+    strbuf[0] = '\0';
 }
 void appendstr(char *str)
 {
@@ -96,7 +96,7 @@ void adjust(void)
 	\\t			     {adjust(); appendstr("\t");}
 	\\[0-9]{3}	     {adjust(); appendstr(yytext);}
 	\\[\\\"]		 {adjust(); appendstr(yytext);}
-	\\[ \n\t\r\f]+\\ {adjust();continue;}
+	\\[ \n\t\r\f]+\\ {adjust(); continue;}
 	\\(.|\n)	     {adjust(); EM_error(EM_tokPos, "illegal token");}
 	(\n|\r\n)	     {adjust(); EM_error(EM_tokPos, "illegal token");}
 	[^\"\\\n(\r\n)]+ {adjust(); appendstr(yytext);}
