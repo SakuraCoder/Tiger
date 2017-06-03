@@ -46,7 +46,7 @@ void adjust(void)
 %%
 [ \t]	{adjust(); continue;}
 (\n|\r\n)  {adjust(); EM_newline(); continue;}
-"/*"[^(*/)]*"*/" {adjust();continue;}
+"/*"[^*]*[*]+([^*/][^*]*[*]+)*[*]*"/" {adjust();continue;}
 
 "for"  	 {adjust(); return FOR;}
 "while" {adjust(); return WHILE;}
