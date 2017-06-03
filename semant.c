@@ -405,6 +405,30 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 		}
 		else
 		{
+			Tr_access access = Tr_allocLocal(level, FALSE);	
+			Tr_exp tmp = Tr_simpleVar(access, level);
+			Tr_exp assing_true = Tr_assignExp(tmp, Tr_intExp(1));
+			Tr_exp assing_false = Tr_assignExp(tmp, Tr_intExp(0));
+
+			if (else_exp && then_exp->kind == A_intExp && then_exp->u.intt == 1) // or
+			{
+				printf("reach1\n");
+				testExpTy = transExp(level, breakk, venv, tenv, test_exp); //single test
+				thenExpTy = transExp(level, breakk, venv, tenv, then_exp); //single test
+				elseExpTy = transExp(level, breakk, venv, tenv, else_exp);
+
+				return expTy(Tr_eseqExp(Tr_ifExp(testExpTy.exp, assing_true, Tr_ifExp(elseExpTy.exp, assing_true, assing_false)), tmp), thenExpTy.ty);
+			}
+			else if (else_exp && else_exp->kind == A_intExp && else_exp->u.intt == 0)
+			{
+				printf("reach2\n");
+				testExpTy = transExp(level, breakk, venv, tenv, test_exp); //single test
+				thenExpTy = transExp(level, breakk, venv, tenv, then_exp); //single test
+				elseExpTy = transExp(level, breakk, venv, tenv, else_exp);
+
+				return expTy(Tr_eseqExp(Tr_ifExp(testExpTy.exp, Tr_ifExp(thenExpTy.exp, assing_true, assing_false), assing_false),tmp), elseExpTy.ty);
+			}
+            printf("reach3\n");
 			testExpTy = transExp(level, breakk, venv, tenv, test_exp);
 			thenExpTy = transExp(level, breakk, venv, tenv, then_exp);
 			if (else_exp)
@@ -418,7 +442,10 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 			}
 			return expTy(Tr_ifExp(testExpTy.exp, thenExpTy.exp, elseExpTy.exp), thenExpTy.ty);
 		}
+
+			
 	}
+	
 	case A_whileExp: 
 	{
 		struct expty whileExpTy = transExp(level, breakk, venv, tenv, e->u.whilee.test);
@@ -560,6 +587,7 @@ static		 Tr_exp transDec(Tr_level level, Tr_exp breakk, S_table venv, S_table te
 			} else {
 				resTy = Ty_Void();
 			}
+			//printf("type: %d\n", actual_ty(fun->u.fun.result)->kind);
 			/*add func-info to venv*/
 			formalTys = makeFormalTyList(tenv, fcl->head->params);
 			{
@@ -580,8 +608,14 @@ static		 Tr_exp transDec(Tr_level level, Tr_exp breakk, S_table venv, S_table te
 				S_enter(venv, l->head->name, E_VarEntry(acls->head, s->head));
 			}
 			final = transExp(funEntry->u.fun.level, breakk, venv, tenv, f->body);
+			if(f->body->kind == A_ifExp)
+			{
+				printf("hello\n");
+			}
 			fun = S_look(venv, f->name);
+			//printf("type: %d\n", actual_ty(fun->u.fun.result)->kind);
 			if (!equal_ty(fun->u.fun.result, final.ty)) {/*check return type is match body type*/
+
 				EM_error(f->pos, "incorrect return type in function '\'%s\''", S_name(f->name));
 			}
 			Tr_procEntryExit(funEntry->u.fun.level, final.exp, acls);

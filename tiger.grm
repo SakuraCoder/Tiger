@@ -62,8 +62,8 @@ void yyerror(char *s)
   FUNCTION VAR TYPE 
 
 %nonassoc LOW
-%nonassoc THEN DO TYPE FUNCTION ID 
-%nonassoc ASSIGN LBRACK ELSE OF COMMA
+
+%right ASSIGN
 %left OR
 %left AND
 %nonassoc EQ NEQ LE LT GT GE

@@ -402,16 +402,20 @@ Tr_exp Tr_arrayExp(Tr_exp size, Tr_exp init)
 	return Tr_Ex(func_call);
 }
 
+
 Tr_exp Tr_ifExp(Tr_exp e1, Tr_exp e2, Tr_exp e3)
 {
 	Temp_label t = Temp_newlabel(), f = Temp_newlabel(), join = Temp_newlabel();
 	struct Cx c1 = unCx(e1);
 	doPatch(c1.trues, t);
 	doPatch(c1.falses, f);
+
 	if(e3)
 	{
+		
 		T_stm e2_stm, e3_stm, join_stm;
 		Temp_temp r = Temp_newtemp();
+		
 		join_stm = T_Jump(T_Name(join), Temp_LabelList(join, NULL));
 		switch(e2->kind)
 		{
@@ -463,6 +467,11 @@ Tr_exp Tr_whileExp(Tr_exp test, Tr_exp body, Tr_exp done)
 								      T_Eseq(T_Label(test_label),
 								             T_Eseq(T_Cjump(T_eq, unEx(test), T_Const(0), unEx(done)->u.NAME, body_label),
 										            T_Eseq(T_Label(unEx(done)->u.NAME), T_Const(0))))))));
+}
+
+Tr_exp Tr_eseqExp(Tr_exp e1, Tr_exp e2)
+{
+	return Tr_Ex(T_Eseq(unNx(e1), unEx(e2)));
 }
 
 Tr_exp Tr_assignExp(Tr_exp left_value, Tr_exp value)
@@ -586,5 +595,6 @@ void print_frag(F_fragList fl, FILE * out) {
 		default: assert(0 && "frag-kind is error");
 		}
 		fl = fl->tail;
+		fflush(out);
 	}
 }

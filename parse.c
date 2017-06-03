@@ -42,12 +42,14 @@ int main(int argc, char **argv) {
 	FILE * f2 = fopen("2.txt", "w");
 	if (temp) {
 		pr_exp(f2, temp, 0);
+		fclose(f2);
 		F_fragList fl = SEM_transProg(temp);
 		print_frag(fl, f1);
+		fclose(f1);
 
 	}
-	fclose(f1);
-	fclose(f2);
+	
+	
 	return 0;
 }
 

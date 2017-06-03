@@ -56,6 +56,7 @@ Tr_exp Tr_whileExp(Tr_exp test, Tr_exp body, Tr_exp done);
 Tr_exp Tr_assignExp(Tr_exp left_value, Tr_exp value);
 Tr_exp Tr_breakExp(Tr_exp done_label);
 Tr_exp Tr_seqExp(Tr_expList tr_explist);
+Tr_exp Tr_eseqExp(Tr_exp e1, Tr_exp e2);
 Tr_exp Tr_eqStringExp(A_oper op, Tr_exp left_exp, Tr_exp right_exp);
 
 Tr_exp Tr_eqExp(A_oper, Tr_exp, Tr_exp);
