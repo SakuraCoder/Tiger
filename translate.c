@@ -265,7 +265,7 @@ Tr_exp Tr_simpleVar(Tr_access access, Tr_level level)  //level is the accessed l
 {
 	T_exp fp = T_Temp(F_FP());
 	Tr_level l;
-	for(l = level;l != access->level; l = l->parent)
+	for(l = level;l != access->level->parent; l = l->parent)
 	{
 		F_access static_link = F_formals(level->frame)->head;
 		fp = F_Exp(static_link, fp);
