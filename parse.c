@@ -78,12 +78,37 @@ int main(int argc, string *argv)
 
    FILE * f1 = fopen("Output/IR Tree.txt", "w");
    FILE * f2 = fopen("Output/Absyn Tree.txt", "w");
-   if (absyn_root) {
-     pr_exp(f2, absyn_root, 0);
-     fclose(f2);
-     print_frag(frags, f1);
-     fclose(f1);
-
+   if (absyn_root)
+   {
+	pr_exp(f2, absyn_root, 0);
+	fclose(f2);
+	if (!frags)
+	{
+		puts("fragList is NULL");
+		return;
+	}
+	while (frags)
+	{
+		F_frag f = frags->head;
+		switch (f->kind)
+		{
+		case F_stringFrag:
+		{
+			print(Tr_Ex(T_Name(f->u.stringg.label)), f1);
+			fprintf(out, "\n");
+			break;
+		}
+		case F_procFrag:
+		{
+			print(Tr_Nx(f->u.proc.body), f1);
+			break;
+		}
+		default: assert(0 && "frag-kind is error");
+		}
+		frags = frags->tail;
+		fflush(out);		
+	}
+   fclose(f1);
    }
    for (;frags;frags=frags->tail) {
         if (frags->head->kind == F_procFrag) {
