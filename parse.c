@@ -81,6 +81,15 @@ int main(int argc, string *argv)
    sprintf(outfile, "%s.s", argv[1]);
    out = fopen(outfile, "w");
 
+   FILE * f1 = fopen("1.txt", "w");
+   FILE * f2 = fopen("2.txt", "w");
+   if (absyn_root) {
+     pr_exp(f2, absyn_root, 0);
+     fclose(f2);
+     print_frag(frags, f1);
+     fclose(f1);
+
+   }
    for (;frags;frags=frags->tail) {
         if (frags->head->kind == F_procFrag) {
             //printStm(frags->head->u.proc.body);
