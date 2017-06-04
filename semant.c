@@ -55,9 +55,7 @@ static bool equal_ty(Ty_ty ty_a, Ty_ty ty_b)
 	return Record_equal_nil || Record_or_Array_equal || Normal_equal;
 }
 
-static Ty_fieldList makeFieldTys(S_table, A_fieldList); /*may use #define*/
-
-														/*-----------------------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------------------------------*/
 
 F_fragList SEM_transProg(A_exp exp)
 {
@@ -102,7 +100,7 @@ static struct expty transVar(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 		/*Type error*/
 		if (ExpTy.ty->kind != Ty_record)
 		{
-			EM_error(v->pos, "\'%s\' is not a record type.", S_name(v->u.field.sym));
+			EM_error(v->pos, "\'%s\' is not a record type.", S_name(v->u.field.var->u.simple));
 			break;
 		}
 		else
