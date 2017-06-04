@@ -2,8 +2,8 @@
  * symbol.h - Symbols and symbol-tables
  *
  */
-#ifndef TIGER_SYMBOL_H_
-#define TIGER_SYMBOL_H_
+#ifndef SYMBOL_H_
+#define SYMBOL_H_
 
 #include "util.h"
 #include "table.h"
@@ -40,4 +40,4 @@ void S_beginScope(S_table t);
    and end the current scope. */
 void S_endScope(S_table t);
 
-#endif /* TIGER_SYMBOL_H_ */
+#endif

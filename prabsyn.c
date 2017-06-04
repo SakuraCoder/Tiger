@@ -8,10 +8,10 @@
 #include "absyn.h"  /* abstract syntax data structures */
 #include "prabsyn.h" /* function prototype */
 
-char res[MAX_LENGTH];
+char list[65535];
 
 /* local function prototypes */
-void chstr(string org);
+void char_String(string org);
 static void pr_var(FILE *out, A_var v, int d);
 static void pr_dec(FILE *out, A_dec v, int d);
 static void pr_ty(FILE *out, A_ty v, int d);
@@ -76,8 +76,8 @@ void pr_exp(FILE *out, A_exp v, int d) {
    fprintf(out, "intExp(%d)", v->u.intt);
    break;
  case A_stringExp:
-   chstr(v->u.stringg);
-   fprintf(out, "stringExp(%s)", res);
+   char_String(v->u.stringg);
+   fprintf(out, "stringExp(%s)", list);
    break;
  case A_callExp:
    fprintf(out, "callExp(%s,\n", S_name(v->u.call.func));
@@ -142,18 +142,18 @@ void pr_exp(FILE *out, A_exp v, int d) {
  } 
 }
 
-void chstr(string org){
+void char_String(string org){
 	int i = 0;
 	while(*org){
 		if (*org == '\n') {
-			res[i++] = '\\';
-			res[i++] = 'n';
+			list[i++] = '\\';
+			list[i++] = 'n';
 			org++;
 		} else {
-			res[i++] = *org++;
+			list[i++] = *org++;
 		}
 	}
-	res[i++] = '\0';
+	list[i++] = '\0';
 }
 
 static void pr_dec(FILE *out, A_dec v, int d) {

@@ -515,16 +515,16 @@ Tr_exp Tr_seqExp(Tr_expList tr_explist)
 Tr_exp Tr_stringCmpExp(A_oper op, Tr_exp left_exp, Tr_exp right_exp)
 {
 	T_expList arg_list = T_ExpList(unEx(left_exp), T_ExpList(unEx(right_exp), NULL));
-	T_exp res = F_externalCall(String("stringEqual"), arg_list);
+	T_exp list = F_externalCall(String("stringEqual"), arg_list);
 	switch(op)
 	{
 		case A_eqOp:
 		{
-			return Tr_Ex(res);
+			return Tr_Ex(list);
 		} 
 		case A_neqOp:
 		{
-			return (res->kind == T_CONST && res->u.CONST == 1) ? Tr_Ex(T_Const(0)): Tr_Ex(T_Const(1));
+			return (list->kind == T_CONST && list->u.CONST == 1) ? Tr_Ex(T_Const(0)): Tr_Ex(T_Const(1));
 		}
 	}
 }
