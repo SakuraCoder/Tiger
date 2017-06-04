@@ -167,48 +167,36 @@ T_stm F_procEntryExit1(F_frame frame, T_stm stm)
 }
 
 
-Temp_temp init_reg(Temp_temp tempReg, char* name)
-{
-	if(tempReg)
-	{
-		return tempReg; 
-	}
-	else
-	{
-		tempReg = Temp_newtemp();
-		Temp_enter(F_TEMPMAP, tempReg, name);
-		return tempReg; 
-	}
-} 
+#define INIT_REG(Reg, Name) (Reg ? Reg : (Reg = Temp_newtemp(), Temp_enter(F_TEMPMAP, Reg, Name), Reg))
 
 static Temp_temp fp = NULL;
-Temp_temp F_FP() { return init_reg(fp, "ebp"); } 
+Temp_temp F_FP() { return INIT_REG(fp, "ebp"); } 
 
 
 static Temp_temp rv = NULL; 
-Temp_temp F_RV() { return init_reg(rv, "eax"); }
+Temp_temp F_RV() { return INIT_REG(rv, "eax"); }
 
 
-
-Temp_tempList F_calldefs() 
+static Temp_tempList callersaves() 
 {
-	static Temp_tempList protected_regs = NULL;
-	Temp_temp ebx = Temp_newtemp();
-	Temp_temp ecx = Temp_newtemp();
-	Temp_temp edx = Temp_newtemp();
-	Temp_temp edi = Temp_newtemp();
-	Temp_temp esi = Temp_newtemp();
+	/* assist-function of calldefs() */
+
+	Temp_temp ebx = Temp_newtemp(),
+			  ecx = Temp_newtemp(),
+			  edx = Temp_newtemp(),
+			  edi = Temp_newtemp(),
+			  esi = Temp_newtemp();
 	Temp_enter(F_TEMPMAP, ebx, "ebx");
 	Temp_enter(F_TEMPMAP, ecx, "ecx");
 	Temp_enter(F_TEMPMAP, edx, "edx");
 	Temp_enter(F_TEMPMAP, edi, "edi");
 	Temp_enter(F_TEMPMAP, esi, "esi");
-	if(protected_regs)
-	{
-		return protected_regs;
-	}
-	else
-	{
-		return TL(F_RV(), TL(ebx, TL(ecx, TL(edx, TL(edi, TL(esi, NULL))))));
-	}
+	return TL(F_RV(), TL(ebx, TL(ecx, TL(edx, TL(edi, TL(esi, NULL))))));
+}
+
+
+Temp_tempList F_calldefs() 
+{
+	static Temp_tempList protected_regs = NULL;
+	return protected_regs ? protected_regs : (protected_regs = callersaves());
 }
