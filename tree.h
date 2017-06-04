@@ -34,7 +34,7 @@ struct T_stm_ {
 };
 
 struct T_exp_ {
-	enum {T_BINOP, T_MEM, T_TEMP, T_ESEQ, T_NAME, T_CONST, T_CALL, T_DOUBLE} kind;
+	enum {T_BINOP, T_MEM, T_TEMP, T_ESEQ, T_NAME, T_CONST, T_CALL} kind;
 	union {
 		struct {T_binOp op; T_exp left, right;} BINOP;
 		T_exp MEM;
@@ -42,7 +42,6 @@ struct T_exp_ {
 		struct {T_stm stm; T_exp exp;} ESEQ;
 		Temp_label NAME;
 		int CONST;
-		float DOUBLE;
 		struct {T_exp fun; T_expList args;} CALL;
 	} u;
 };
@@ -64,7 +63,6 @@ T_exp T_Temp(Temp_temp);
 T_exp T_Eseq(T_stm, T_exp);
 T_exp T_Name(Temp_label);
 T_exp T_Const(int);
-T_exp T_Double(float);
 T_exp T_Call(T_exp, T_expList);
 
 T_relOp T_notRel(T_relOp);  /* a op b    ==     not(a notRel(op) b)  */

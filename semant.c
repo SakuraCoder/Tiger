@@ -181,7 +181,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 			Arguments = e->u.call.args;
 			while (Arguments)
 			{
-				Tr_expList_prepend(transExp(level, breakk, venv, tenv, Arguments->head).exp, &ArgumentList);
+				Tr_add_exp(transExp(level, breakk, venv, tenv, Arguments->head).exp, &ArgumentList);
 				Arguments = Arguments->tail;
 			}
 			Exp = Tr_callExp(FunCall->u.fun.label, FunCall->u.fun.level, level, &ArgumentList);
@@ -226,7 +226,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 			else if (rightExp.ty->kind != Ty_int)
 				EM_error(e->u.op.right->pos, "Right hand side is not int type!");
 			else if (leftExp.ty->kind == Ty_int && rightExp.ty->kind == Ty_int)
-				OpExp = Tr_arithExp(e->u.op.oper, leftExp.exp, rightExp.exp);
+				OpExp = Tr_binOp(e->u.op.oper, leftExp.exp, rightExp.exp);
 			break;
 		}
 		case A_eqOp:
@@ -240,7 +240,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 				if (!equal_ty(rightExp.ty, leftExp.ty))
 					EM_error(e->u.op.right->pos, "Left and right hand side types do not match.");
 				else
-					OpExp = Tr_eqStringExp(e->u.op.oper, leftExp.exp, rightExp.exp);
+					OpExp = Tr_stringCmpExp(e->u.op.oper, leftExp.exp, rightExp.exp);
 				break;
 			}
 
@@ -249,7 +249,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 				if (!equal_ty(rightExp.ty, leftExp.ty))
 					EM_error(e->u.op.right->pos, "Left and right hand side types do not match.");
 				else
-					OpExp = Tr_eqRef(e->u.op.oper, leftExp.exp, rightExp.exp);
+					OpExp = Tr_comOpExp(e->u.op.oper, leftExp.exp, rightExp.exp);
 				break;
 			}
 			case Ty_record:
@@ -257,7 +257,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 				if (!equal_ty(rightExp.ty, leftExp.ty))
 					EM_error(e->u.op.right->pos, "Left and right hand side types do not match.");
 				else if (equal_ty(rightExp.ty, leftExp.ty) || rightExp.ty->kind == Ty_nil)
-					OpExp = Tr_eqRef(e->u.op.oper, leftExp.exp, rightExp.exp);
+					OpExp = Tr_comOpExp(e->u.op.oper, leftExp.exp, rightExp.exp);
 				break;
 			}
 			default:
@@ -278,7 +278,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 				if (!rightExp.ty->kind == Ty_int)
 					EM_error(e->u.op.right->pos, "Right hand side type is expected to be int.");
 				else
-					OpExp = Tr_relExp(e->u.op.oper, leftExp.exp, rightExp.exp);
+					OpExp = Tr_comOpExp(e->u.op.oper, leftExp.exp, rightExp.exp);
 				break;
 			}
 			case Ty_string:
@@ -286,7 +286,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 				if (!rightExp.ty->kind == Ty_string)
 					EM_error(e->u.op.right->pos, "Right hand side type is expected to be string.");
 				else
-					OpExp = Tr_eqStringExp(e->u.op.oper, leftExp.exp, rightExp.exp);
+					OpExp = Tr_stringCmpExp(e->u.op.oper, leftExp.exp, rightExp.exp);
 				break;
 			}
 			default:
@@ -335,7 +335,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 				fieldList = e->u.record.fields;
 				while (fieldList)
 				{
-					Tr_expList_prepend(transExp(level, breakk, venv, tenv, fieldList->head->exp).exp, &RecordExpList);
+					Tr_add_exp(transExp(level, breakk, venv, tenv, fieldList->head->exp).exp, &RecordExpList);
 					fieldList = fieldList->tail;
 					Offset++;
 				}
@@ -356,7 +356,7 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 		while (SeqExpList)
 		{
 			SeqExpTy = transExp(level, breakk, venv, tenv, SeqExpList->head);
-			Tr_expList_prepend(SeqExpTy.exp, &Seq_TyList);
+			Tr_add_exp(SeqExpTy.exp, &Seq_TyList);
 			SeqExpList = SeqExpList->tail;
 		}
 
@@ -492,11 +492,11 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 
 		while (decList)
 		{
-			Tr_expList_prepend(transDec(level, breakk, venv, tenv, decList->head), &expList);
+			Tr_add_exp(transDec(level, breakk, venv, tenv, decList->head), &expList);
 			decList = decList->tail;
 		}
 		struct expty letBodyExpTy = transExp(level, breakk, venv, tenv, e->u.let.body);
-		Tr_expList_prepend(letBodyExpTy.exp, &expList);
+		Tr_add_exp(letBodyExpTy.exp, &expList);
 
 		S_endScope(venv);
 		S_endScope(tenv);

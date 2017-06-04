@@ -25,7 +25,7 @@ struct Tr_level_ {
 };
 
 
-void Tr_expList_prepend(Tr_exp head, Tr_expList * tr_explist);
+void Tr_add_exp(Tr_exp head, Tr_expList * tr_explist);
 Tr_level Tr_outermost(void);
 Tr_level Tr_newLevel(Tr_level parent, Temp_label name, U_boolList formals);
 Tr_accessList Tr_formals(Tr_level level);
@@ -38,11 +38,10 @@ Tr_exp Tr_simpleVar(Tr_access access, Tr_level level);  //simple variable defini
 Tr_exp Tr_fieldVar(Tr_exp base, int offset);   //field selection 
 Tr_exp Tr_subscriptVar(Tr_exp base, Tr_exp index); //array subscript
 
-Tr_exp Tr_arithExp(A_oper, Tr_exp, Tr_exp);
-Tr_exp Tr_relExp(A_oper, Tr_exp, Tr_exp);
+Tr_exp Tr_binOp(A_oper, Tr_exp, Tr_exp);
+Tr_exp Tr_comOpExp(A_oper, Tr_exp, Tr_exp);
 Tr_exp Tr_intExp(int i); //int type
 Tr_exp Tr_stringExp(string str); //string type
-Tr_exp Tr_doubleExp(float);
 
 Tr_exp Tr_noExp(); //no value
 Tr_exp Tr_nilExp(); //nil value
@@ -57,10 +56,7 @@ Tr_exp Tr_assignExp(Tr_exp left_value, Tr_exp value);
 Tr_exp Tr_breakExp(Tr_exp done_label);
 Tr_exp Tr_seqExp(Tr_expList tr_explist);
 Tr_exp Tr_eseqExp(Tr_exp e1, Tr_exp e2);
-Tr_exp Tr_eqStringExp(A_oper op, Tr_exp left_exp, Tr_exp right_exp);
-
-Tr_exp Tr_eqExp(A_oper, Tr_exp, Tr_exp);
-Tr_exp Tr_eqRef(A_oper, Tr_exp, Tr_exp);
+Tr_exp Tr_stringCmpExp(A_oper op, Tr_exp left_exp, Tr_exp right_exp);
 
 void Tr_procEntryExit(Tr_level level, Tr_exp body, Tr_accessList formals);
 F_fragList Tr_getResult();
