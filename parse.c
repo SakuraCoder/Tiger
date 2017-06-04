@@ -76,8 +76,8 @@ int main(int argc, string *argv)
    sprintf(outfile, "%s.s", argv[1]);
    out = fopen(outfile, "w");
 
-   FILE * f1 = fopen("IR Tree.txt", "w");
-   FILE * f2 = fopen("Absyn Tree.txt", "w");
+   FILE * f1 = fopen("Output/IR Tree.txt", "w");
+   FILE * f2 = fopen("Output/Absyn Tree.txt", "w");
    if (absyn_root) {
      pr_exp(f2, absyn_root, 0);
      fclose(f2);
