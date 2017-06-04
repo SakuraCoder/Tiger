@@ -478,12 +478,9 @@ Tr_exp Tr_doneExp()
 Tr_exp Tr_whileExp(Tr_exp test, Tr_exp body, Tr_exp done)
 {
 	Temp_label test_label = Temp_newlabel(), body_label = Temp_newlabel();
-	return Tr_Ex(T_Eseq(T_Jump(T_Name(test_label), Temp_LabelList(test_label, NULL)), 
-				        T_Eseq(T_Label(body_label),
-							   T_Eseq(unNx(body),
-								      T_Eseq(T_Label(test_label),
-								             T_Eseq(T_Cjump(T_eq, unEx(test), T_Const(0), unEx(done)->u.NAME, body_label),
-										            T_Eseq(T_Label(unEx(done)->u.NAME), T_Const(0))))))));
+	T_stm jump_stm = T_Jump(T_Name(test_label), Temp_LabelList(test_label, NULL));
+	T_stm jump_test = T_Cjump(T_eq, unEx(test), T_Const(0), unEx(done)->u.NAME, body_label);
+	return Tr_Ex(T_Eseq( jump_stm, T_Eseq(T_Label(body_label), T_Eseq(unNx(body), T_Eseq(T_Label(test_label), T_Eseq(jump_test, T_Eseq(T_Label(unEx(done)->u.NAME), T_Const(0))))))));
 }
 
 Tr_exp Tr_eseqExp(Tr_exp e1, Tr_exp e2)
