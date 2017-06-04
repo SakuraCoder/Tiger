@@ -40,7 +40,7 @@ static		  Ty_ty transTy(											  S_table tenv, A_ty  t);
 static Ty_ty actual_ty(Ty_ty ty)
 {
 	if (ty && ty->kind == Ty_name)
-		actual_ty(ty->u.name.ty);
+		return actual_ty(ty->u.name.ty);
 	else return ty;
 }
 /*match check for two Ty_ty type*/
@@ -74,7 +74,6 @@ static struct expty transVar(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 
 	switch (v->kind)
 	{
-	/* var id. i.e.: a */
 	case A_simpleVar:
 	{
 		E_enventry Env = S_look(venv, v->u.simple);
@@ -91,7 +90,6 @@ static struct expty transVar(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 			return expTy(Var, actual_ty(Env->u.var.ty));
 		}
 	}
-	/* var record. i.e.: a.b */
 	case A_fieldVar:
 	{
 		ExpTy = transVar(level, breakk, venv, tenv, v->u.field.var);
@@ -114,7 +112,6 @@ static struct expty transVar(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 					Var = Tr_fieldVar(ExpTy.exp, Offset);
 					return expTy(Var, actual_ty(fieldList->head->ty));
 				}
-
 				fieldList = fieldList->tail;
 				Offset++;
 			}
@@ -122,7 +119,6 @@ static struct expty transVar(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 			break;
 		}
 	}
-	/*var array (a[b])*/
 	case A_subscriptVar: 
 	{
 		struct expty ExpTy_Subscript;
@@ -662,7 +658,7 @@ static		 Tr_exp transDec(Tr_level level, Tr_exp breakk, S_table venv, S_table te
 			else
 				S_enter(venv, d->u.var.var, E_VarEntry(access, varTy));			
 		}
-		/*var with our type decelaration, e.g.: var a:= 0.*/
+		/*var without type decelaration, e.g.: var a:= 0.*/
 		else 
 		{
 			if (initExpTy.ty->kind == Ty_void || initExpTy.ty->kind == Ty_nil)
