@@ -48,7 +48,6 @@ Ty_ty Ty_Name(S_symbol sym, Ty_ty ty)
 	return p;
 }
 
-
 Ty_tyList Ty_TyList(Ty_ty head, Ty_tyList tail)
 {
 	Ty_tyList p = checked_malloc(sizeof(*p));

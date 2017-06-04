@@ -35,24 +35,19 @@ A_exp parse(string fname)
     if (yyparse() == 0) 
 		return absyn_root;
 	else 
-		printf("fuck! not pass syntax!\n");
+		printf("Syntax Error.\n");
 		return NULL;
 }
 
 static void doProc(FILE *out, F_frame frame, T_stm body)
 {
- //printStm(body);
  AS_proc proc;
- //struct RA_result allocation;
  T_stmList stmList;
  AS_instrList iList;
 
  stmList = C_linearize(body);
- //printStmList(stdout, stmList);
  stmList = C_traceSchedule(C_basicBlocks(stmList));
- /* printStmList(stdout, stmList); */
- iList  = codegen(frame, stmList); /* 9 */
- //printStmList(stdout, stmList);
+ iList  = codegen(frame, stmList); 
  fprintf(out, "BEGIN %s\n", Temp_labelstring(F_name(frame)));
  AS_printInstrList (out, iList, Temp_layerMap(F_tempMap,Temp_name()));
  fprintf(out, "END %s\n\n", Temp_labelstring(F_name(frame)));
@@ -81,8 +76,8 @@ int main(int argc, string *argv)
    sprintf(outfile, "%s.s", argv[1]);
    out = fopen(outfile, "w");
 
-   FILE * f1 = fopen("1.txt", "w");
-   FILE * f2 = fopen("2.txt", "w");
+   FILE * f1 = fopen("IR Tree.txt", "w");
+   FILE * f2 = fopen("Absyn Tree.txt", "w");
    if (absyn_root) {
      pr_exp(f2, absyn_root, 0);
      fclose(f2);
@@ -92,7 +87,6 @@ int main(int argc, string *argv)
    }
    for (;frags;frags=frags->tail) {
         if (frags->head->kind == F_procFrag) {
-            //printStm(frags->head->u.proc.body);
             doProc(out, frags->head->u.proc.frame, frags->head->u.proc.body);
         }
         else if (frags->head->kind == F_stringFrag) {
