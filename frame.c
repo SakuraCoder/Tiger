@@ -166,37 +166,33 @@ T_stm F_procEntryExit1(F_frame frame, T_stm stm)
 	return stm;
 }
 
-
-#define INIT_REG(Reg, Name) (Reg ? Reg : (Reg = Temp_newtemp(), Temp_enter(F_TEMPMAP, Reg, Name), Reg))
-
 static Temp_temp fp = NULL;
-Temp_temp F_FP() { return INIT_REG(fp, "ebp"); } 
-
-
-static Temp_temp rv = NULL; 
-Temp_temp F_RV() { return INIT_REG(rv, "eax"); }
+Temp_temp F_FP() 
+{ 
+	if(!fp)
+	{
+		fp= Temp_newtemp();
+		Temp_enter(F_TEMPMAP, fp, "ebp");
+	}
+	return fp;
+} 
 
 
 static Temp_tempList callersaves() 
 {
-	/* assist-function of calldefs() */
 
-	Temp_temp ebx = Temp_newtemp(),
-			  ecx = Temp_newtemp(),
-			  edx = Temp_newtemp(),
-			  edi = Temp_newtemp(),
-			  esi = Temp_newtemp();
-	Temp_enter(F_TEMPMAP, ebx, "ebx");
-	Temp_enter(F_TEMPMAP, ecx, "ecx");
-	Temp_enter(F_TEMPMAP, edx, "edx");
-	Temp_enter(F_TEMPMAP, edi, "edi");
-	Temp_enter(F_TEMPMAP, esi, "esi");
-	return TL(F_RV(), TL(ebx, TL(ecx, TL(edx, TL(edi, TL(esi, NULL))))));
+	Temp_temp ra = Temp_newtemp();
+	Temp_enter(F_TEMPMAP, ra, "ra");
+	return TL(F_FP(), NULL);
 }
 
 
 Temp_tempList F_calldefs() 
 {
-	static Temp_tempList protected_regs = NULL;
-	return protected_regs ? protected_regs : (protected_regs = callersaves());
+	static Temp_tempList caller_rg = NULL;
+	if(!caller_rg)
+	{
+		caller_rg = callersaves();
+	}
+	return caller_rg;
 }
