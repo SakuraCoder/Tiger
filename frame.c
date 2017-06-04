@@ -166,21 +166,16 @@ T_stm F_procEntryExit1(F_frame frame, T_stm stm)
 	return stm;
 }
 
-bool F_isEscape(F_access a) { return (a && a->kind == inFrame); }
 
 #define INIT_REG(Reg, Name) (Reg ? Reg : (Reg = Temp_newtemp(), Temp_enter(F_TEMPMAP, Reg, Name), Reg))
 
 static Temp_temp fp = NULL;
 Temp_temp F_FP() { return INIT_REG(fp, "ebp"); } 
 
-static Temp_temp sp = NULL;
-Temp_temp F_SP() { return INIT_REG(fp, "esp"); }
 
 static Temp_temp rv = NULL; 
 Temp_temp F_RV() { return INIT_REG(rv, "eax"); }
 
-static Temp_temp ra = NULL;
-Temp_temp F_RA() { return INIT_REG(ra, "---"); }
 
 static Temp_tempList callersaves() 
 {
@@ -199,31 +194,9 @@ static Temp_tempList callersaves()
 	return TL(F_RV(), TL(ebx, TL(ecx, TL(edx, TL(edi, TL(esi, NULL))))));
 }
 
-static Temp_tempList sepecialregs()
-{
-    static Temp_tempList spcregs = NULL;
-    if (!spcregs) spcregs = TL(F_SP(), TL(F_FP(), TL(F_RV(), NULL)));
-    return spcregs;
-}
-
-/*-short argsregs, because pass arg by stack*/
-
-static Temp_tempList calleesaves() 
-{   
-    /* callee protect sp, fp, ebx */
-    static Temp_tempList calleeregs = NULL;
-    if (!calleeregs) {
-        Temp_temp ebx = Temp_newtemp();
-        Temp_enter(F_TEMPMAP, ebx, "ebx");
-        calleeregs = TL(F_SP(), TL(F_FP(), TL(ebx, NULL)));
-    }
-    return calleeregs;
-}
-
 
 Temp_tempList F_calldefs() 
 {
-	/* some registers that may raise side-effect (caller procted, return-val-reg, return-addr-reg) */
 	static Temp_tempList protected_regs = NULL;
 	return protected_regs ? protected_regs : (protected_regs = callersaves());
 }

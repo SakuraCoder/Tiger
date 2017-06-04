@@ -37,8 +37,7 @@ F_accessList F_formals(F_frame f);
 F_access F_allocLocal(F_frame f, bool escape);
 
 Temp_temp F_FP(void);
-Temp_temp F_RV(void);
-bool F_isEscape(F_access);
+Temp_temp F_RV();
 Temp_tempList F_calldefs();
 
 extern const int F_WORD_SIZE;
