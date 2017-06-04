@@ -54,13 +54,10 @@ static bool equal_ty(Ty_ty ty_a, Ty_ty ty_b)
 
 	return Record_equal_nil || Record_or_Array_equal || Normal_equal;
 }
-
 /*-----------------------------------------------------------------------------------------------------*/
-
 F_fragList SEM_transProg(A_exp exp)
 {
 	struct expty et = transExp(Tr_outermost(), NULL, E_base_venv(), E_base_tenv(), exp);
-
 	return Tr_getResult();
 }
 
@@ -72,29 +69,26 @@ static struct expty transVar(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 	{
 		Tr_exp Var = Tr_noExp();
 		struct expty ExpTy;
-
 		switch (v->kind)
 		{
 		case A_simpleVar:
 		{
-			E_enventry Env = S_look(venv, v->u.simple);
-
+			E_enventry envSimple = S_look(venv, v->u.simple);
 			/*Not found*/
-			if (!Env || Env->kind != E_varEntry)
+			if (!envSimple || envSimple->kind != E_varEntry)
 			{
 				EM_error(v->pos, "Undefined variable: \'%s\'.", S_name(v->u.simple));
 				break;
 			}
 			else
 			{
-				Var = Tr_simpleVar(Env->u.var.access, level);
-				return expTy(Var, actual_ty(Env->u.var.ty));
+				Var = Tr_simpleVar(envSimple->u.var.access, level);
+				return expTy(Var, actual_ty(envSimple->u.var.ty));
 			}
 		}
 		case A_fieldVar:
 		{
 			ExpTy = transVar(level, breakk, venv, tenv, v->u.field.var);
-
 			/*Type error*/
 			if (ExpTy.ty->kind != Ty_record)
 			{
