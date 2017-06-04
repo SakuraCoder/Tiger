@@ -1,12 +1,12 @@
-test: assem.o canon.o ucodegen.o printtree.o prabsyn.o types.o tree.o temp.o frame.o translate.o env.o semant.o lex.yy.o errormsg.o util.o y.tab.o symbol.o absyn.o table.o parse.o
-	cc -g -o test assem.o canon.o ucodegen.o printtree.o prabsyn.o types.o tree.o temp.o frame.o translate.o env.o semant.o lex.yy.o errormsg.o util.o y.tab.o symbol.o absyn.o table.o parse.o
+test: assem.o canon.o codegen.o printtree.o prabsyn.o types.o tree.o temp.o frame.o translate.o env.o semant.o lex.yy.o errormsg.o util.o y.tab.o symbol.o absyn.o table.o parse.o
+	cc -g -o test assem.o canon.o codegen.o printtree.o prabsyn.o types.o tree.o temp.o frame.o translate.o env.o semant.o lex.yy.o errormsg.o util.o y.tab.o symbol.o absyn.o table.o parse.o
 
 assem.o: assem.c 
 	cc -g -c assem.c
 canon.o: canon.c
 	cc -g -c canon.c
-ucodegen.o: ucodegen.c
-	cc -g -c ucodegen.c
+codegen.o: codegen.c
+	cc -g -c codegen.c
 printtree.o: printtree.c
 	cc -g -c printtree.c
 prabsyn.o: prabsyn.c prabsyn.h
