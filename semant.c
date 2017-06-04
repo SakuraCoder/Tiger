@@ -98,8 +98,7 @@ static struct expty transVar(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 			else
 			{
 				int Offset = 0;
-				Ty_fieldList fieldList;
-				fieldList = ExpTy.ty->u.record;
+				Ty_fieldList fieldList = ExpTy.ty->u.record;
 				while (fieldList)
 				{
 					if (fieldList->head->name == v->u.field.sym)
@@ -118,7 +117,6 @@ static struct expty transVar(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 		{
 			struct expty ExpTy_Subscript;
 			ExpTy = transVar(level, breakk, venv, tenv, v->u.subscript.var);
-
 			if (ExpTy.ty->kind != Ty_array)
 			{
 				EM_error(v->pos, "Not a array type");
@@ -171,32 +169,31 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 		else
 		{
 			struct expty tempArg;
-			A_expList Arguments = NULL;
+			A_expList arguments = e->u.call.args;
 			Tr_expList ArgumentList = NULL;
 			Ty_tyList formalList = FunCall->u.fun.formals;
-			Arguments = e->u.call.args;
-			while (Arguments)
+			while (arguments)
 			{
-				Tr_add_exp(transExp(level, breakk, venv, tenv, Arguments->head).exp, &ArgumentList);
-				Arguments = Arguments->tail;
+				Tr_add_exp(transExp(level, breakk, venv, tenv, arguments->head).exp, &ArgumentList);
+				arguments = arguments->tail;
 			}
 			Exp = Tr_callExp(FunCall->u.fun.label, FunCall->u.fun.level, level, &ArgumentList);
-			Arguments = e->u.call.args;
+			arguments = e->u.call.args;
 
-			while (Arguments && formalList)
+			while (arguments && formalList)
 			{
-				tempArg = transExp(level, breakk, venv, tenv, Arguments->head);
+				tempArg = transExp(level, breakk, venv, tenv, arguments->head);
 				if (!equal_ty(tempArg.ty, formalList->head))
 				{
 					EM_error(e->pos, "Function parameters type failed to match in \'%s\'\n", S_name(e->u.call.func));
 					return expTy(Exp, Ty_Void());
 				}
-				Arguments = Arguments->tail;
+				arguments = arguments->tail;
 				formalList = formalList->tail;
 			}
-			if (Arguments && !formalList)
+			if (arguments && !formalList)
 				EM_error(e->pos, "Function \'%s\' parameter redundant!\n", S_name(e->u.call.func));
-			else if (!Arguments && formalList)
+			else if (!arguments && formalList)
 				EM_error(e->pos, "Function \'%s\' parameter insufficient!\n", S_name(e->u.call.func));
 			else if (!FunCall->u.fun.result)
 				EM_error(e->pos, "Function \'%s\' return type undefined.\n", S_name(e->u.call.func));
@@ -239,7 +236,6 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 					OpExp = Tr_stringCmpExp(e->u.op.oper, leftExp.exp, rightExp.exp);
 				break;
 			}
-
 			case Ty_array:
 			{
 				if (!equal_ty(rightExp.ty, leftExp.ty))
@@ -260,7 +256,6 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 				EM_error(e->u.op.right->pos, "Unexpected type of left hand side.");
 			}
 			break;
-
 		}
 		case A_ltOp:
 		case A_leOp:
@@ -503,13 +498,9 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 	{
 		Ty_ty arrayTy = actual_ty(S_look(tenv, e->u.array.typ));
 		if (!arrayTy)
-		{
 			EM_error(e->pos, "Array type \'%s\' is undefined!", S_name(e->u.array.typ));
-		}
 		else if (arrayTy->kind != Ty_array)
-		{
 			EM_error(e->pos, "\'%s\' is not a array type!", S_name(e->u.array.typ));
-		}
 		else
 		{
 			struct expty sizeExpTy = transExp(level, breakk, venv, tenv, e->u.array.size);
@@ -685,7 +676,7 @@ static		 Tr_exp transDec(Tr_level level, Tr_exp breakk, S_table venv, S_table te
 			typeList = typeList->tail;
 		}
 		if (Cycle)
-			EM_error(d->pos, "Illegal Cycle.");
+			EM_error(d->pos, "Illegal cycle.");
 		return Tr_noExp();
 	}
 	default:
