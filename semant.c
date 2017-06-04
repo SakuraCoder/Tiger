@@ -31,7 +31,7 @@ struct expty expTy(Tr_exp exp, Ty_ty ty)
 static struct expty transVar(Tr_level level, Tr_exp breakk, S_table venv, S_table tenv, A_var v);
 static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_table tenv, A_exp e);
 static		 Tr_exp transDec(Tr_level level, Tr_exp breakk, S_table venv, S_table tenv, A_dec d);
-static		  Ty_ty transTy(S_table tenv, A_ty  t);
+static		  Ty_ty transTy(											  S_table tenv, A_ty  t);
 /*-----------------------------------------------------------------------------------------------------*/
 /*Functions Within the module*/
 
@@ -69,17 +69,16 @@ static struct expty transVar(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 	if (!v)
 		return expTy(Tr_noExp(), Ty_Void());
 
-	Tr_exp Var;
+	Tr_exp Var = Tr_noExp();
 	struct expty ExpTy;
 
 	switch (v->kind)
 	{
-		/* var id. i.e.: a */
+	/* var id. i.e.: a */
 	case A_simpleVar:
 	{
 		E_enventry Env = S_look(venv, v->u.simple);
-		Var = Tr_noExp();
-
+		
 		/*Not found*/
 		if (!Env || Env->kind != E_varEntry)
 		{
@@ -96,7 +95,7 @@ static struct expty transVar(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 	case A_fieldVar:
 	{
 		ExpTy = transVar(level, breakk, venv, tenv, v->u.field.var);
-		Var = Tr_noExp();
+		
 		/*Type error*/
 		if (ExpTy.ty->kind != Ty_record)
 		{
@@ -123,11 +122,12 @@ static struct expty transVar(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 			break;
 		}
 	}
-	case A_subscriptVar: /*var array (a[b])*/
+	/*var array (a[b])*/
+	case A_subscriptVar: 
 	{
 		struct expty ExpTy_Subscript;
 		ExpTy = transVar(level, breakk, venv, tenv, v->u.subscript.var);
-		Var = Tr_noExp();
+		
 		if (ExpTy.ty->kind != Ty_array)
 		{
 			EM_error(v->pos, "Not a array type");
@@ -152,7 +152,7 @@ static struct expty transVar(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 		assert(0);
 	}
 	/*return when error found*/
-	return expTy(Var, Ty_Int());
+	return expTy(Tr_noExp(), Ty_Int());
 }
 static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_table tenv, A_exp e) {
 	/*empty*/

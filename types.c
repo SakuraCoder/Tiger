@@ -6,9 +6,10 @@
 */
 
 #include <stdio.h>
-#include "util.h"
 #include "symbol.h"
+#include "errormsg.h"
 #include "types.h"
+
 
 static struct Ty_ty_ tynil = { Ty_nil };
 Ty_ty Ty_Nil(void) { return &tynil; }
@@ -100,4 +101,3 @@ void TyList_print(Ty_tyList list)
 		printf(")");
 	}
 }
-
