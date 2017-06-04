@@ -37,11 +37,11 @@ inline void write_asmstringint(char *asm_string, char* str, int arg)
 {
     sprintf(asm_string, str, arg);
 }
-inline void write_asmstring2(char *asm_string, char* str, char* arg1, int arg2)
+inline void write_asmstringstrint(char *asm_string, char* str, char* arg1, int arg2)
 {
     sprintf(asm_string, str, arg1, arg2);
 }
-inline void assem_move_mem_plus(string p2asm_str, char *asm_string, T_exp dst, T_exp src, int constt)
+inline void move(string p2asm_str, char *asm_string, T_exp dst, T_exp src, int constt)
 {
     sprintf(asm_string, "mov `s1, %d(`s0)", constt); 
     p2asm_str = String(asm_string); 
@@ -65,7 +65,7 @@ static Temp_temp munchExp(T_exp e)
 {
     char assem_string[100];
     string p2asm_str;
-    Temp_temp r = Temp_newtemp(); /* return value */
+    Temp_temp r = Temp_newtemp(); 
 
     switch (e->kind) 
     {
@@ -78,13 +78,13 @@ static Temp_temp munchExp(T_exp e)
             
             if (left->kind == T_CONST)
             {
-                write_asmstring2(assem_string, "%s $%x, `d0", op, left->u.CONST);   
+                write_asmstringstrint(assem_string, "%s $%x, `d0", op, left->u.CONST);   
                 p2asm_str = String(assem_string);
                 emit(AS_Oper(p2asm_str, TL(r = munchExp(right), NULL), NULL, NULL));
             } 
             else if (e->u.BINOP.right->kind == T_CONST) 
             {
-                write_asmstring2(assem_string, "%s $%x, `d0", op, right->u.CONST);
+                write_asmstringstrint(assem_string, "%s $%x, `d0", op, right->u.CONST);
                 p2asm_str = String(assem_string);  
                 emit(AS_Oper(p2asm_str, TL(r = munchExp(left), NULL), NULL, NULL));
             } 
@@ -153,7 +153,7 @@ static Temp_temp munchExp(T_exp e)
         {
             r = munchExp(e->u.CALL.fun);
             emit(AS_Oper(String("call `s0"), F_calldefs(), TL(r, munchArgs(0, e->u.CALL.args)), NULL));
-            return r; /* return value unsure */
+            return r; 
         }
         default: 
         {
@@ -197,11 +197,11 @@ static void munchStm(T_stm s)
                 {
                     if (dst->u.MEM->u.BINOP.right->kind == T_CONST) 
                     {
-                        assem_move_mem_plus(p2asm_str, assem_string, dst->u.MEM->u.BINOP.left, src, dst->u.MEM->u.BINOP.right->u.CONST); 
+                        move(p2asm_str, assem_string, dst->u.MEM->u.BINOP.left, src, dst->u.MEM->u.BINOP.right->u.CONST); 
                     } 
                     if (dst->u.MEM->u.BINOP.left->kind == T_CONST) 
                     { 
-                        assem_move_mem_plus(p2asm_str, assem_string, dst->u.MEM->u.BINOP.right, src, dst->u.MEM->u.BINOP.left->u.CONST);         
+                        move(p2asm_str, assem_string, dst->u.MEM->u.BINOP.right, src, dst->u.MEM->u.BINOP.left->u.CONST);         
                     }
                 } 
                 else if (dst->u.MEM->kind == T_CONST) 
@@ -246,12 +246,8 @@ static void munchStm(T_stm s)
     }
 }
 
-static string reg_names[] = {"eax", "ebx", "ecx", "edx", "edi", "esi"}; 
-static int    reg_count = 0;
 static Temp_tempList munchArgs(int i, T_expList args) 
 {
-    char assem_string[100];
-    string p2asm_str;
     if (!args) 
     {
     	return NULL;
@@ -262,31 +258,29 @@ static Temp_tempList munchArgs(int i, T_expList args)
     return (rarg, tlist);
 }
 
-static AS_instrList instrList = NULL, last = NULL;
-static void emit (AS_instr instr) 
+static AS_instrList iList = NULL, last = NULL;
+static void emit (AS_instr ins) 
 {
-    if (!instrList) 
+    if (!iList) 
     {
-        instrList = AS_InstrList(instr, NULL);
-        last = instrList;
+        last = iList = AS_InstrList(ins, NULL);
     } 
     else 
     {
-        last->tail = AS_InstrList(instr, NULL);
-        last = last->tail;
+        last = last->tail = AS_InstrList(ins, NULL);
     }
 }
 
-AS_instrList codegen(F_frame f, T_stmList s)
+AS_instrList codegen(F_frame f, T_stmList stmlist)
 {
-    AS_instrList al = NULL;
-    T_stmList sl = s;
+    AS_instrList list = NULL;
+    T_stmList sl;
     Co_frame = f;
-    for (; sl; sl = sl->tail) 
+    for (sl = stmlist; sl; sl = sl->tail) 
     {
         munchStm(sl->head);
     }
-    al = instrList;
-    instrList = last = NULL;
-    return al;
+    list = iList;
+    iList = last = NULL;
+    return list;
 }

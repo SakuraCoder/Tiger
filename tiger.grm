@@ -3,8 +3,6 @@
 #include "symbol.h"
 #include "errormsg.h"
 #include "absyn.h"
-int yydebug=1;  
-
 
 int yylex(void); 
 
@@ -52,7 +50,8 @@ void yyerror(char *s)
 %token <ival> INT
 
 %token 
-  COMMA COLON SEMICOLON LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE DOT PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GEAND OR ASSIGN
+  COMMA COLON SEMICOLON LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE DOT 
+  PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GEAND OR ASSIGN
   ARRAY IF THEN ELSE WHILE FOR TO DO LET IN END OF BREAK NIL FUNCTION VAR TYPE 
 
 %nonassoc LOW
@@ -66,9 +65,9 @@ void yyerror(char *s)
 %left UMINUS
 
 
-%start program
+%start prog
 %%
-program:    root                          {absyn_root=$1;}
+prog:       root                          {absyn_root=$1;}
             ;
 
 root:       /* empty */                   {$$=NULL;}

@@ -60,5 +60,4 @@ Tr_exp Tr_stringCmpExp(A_oper op, Tr_exp left_exp, Tr_exp right_exp);
 
 void Tr_procEntryExit(Tr_level level, Tr_exp body, Tr_accessList formals);
 F_fragList Tr_getResult();
-
-void print_frag(F_fragList, FILE *);
+void fragOutput(F_fragList, FILE *);

@@ -5,13 +5,12 @@
 #include "translate.h"
 #include "printtree.h"
 
-
-
-
-
-
-
-struct Cx { patchList trues; patchList falses; T_stm stm;};
+struct Cx 
+{
+	patchList trues;
+	patchList falses;
+	T_stm stm;
+};
 
 struct Tr_exp_ 
 {
@@ -516,16 +515,16 @@ Tr_exp Tr_seqExp(Tr_expList tr_explist)
 Tr_exp Tr_stringCmpExp(A_oper op, Tr_exp left_exp, Tr_exp right_exp)
 {
 	T_expList arg_list = T_ExpList(unEx(left_exp), T_ExpList(unEx(right_exp), NULL));
-	T_exp res = F_externalCall(String("stringEqual"), arg_list);
+	T_exp list = F_externalCall(String("stringEqual"), arg_list);
 	switch(op)
 	{
 		case A_eqOp:
 		{
-			return Tr_Ex(res);
+			return Tr_Ex(list);
 		} 
 		case A_neqOp:
 		{
-			return (res->kind == T_CONST && res->u.CONST == 1) ? Tr_Ex(T_Const(0)): Tr_Ex(T_Const(1));
+			return (list->kind == T_CONST && list->u.CONST == 1) ? Tr_Ex(T_Const(0)): Tr_Ex(T_Const(1));
 		}
 	}
 }
@@ -564,30 +563,37 @@ F_fragList Tr_getResult(void)
 		return fragList;
 }
 
-void print(Tr_exp et, FILE * out) {
+void output(Tr_exp et, FILE * out) {
     if (et->kind == Tr_ex) printExp(unEx(et), out);
 	if (et->kind == Tr_nx) printStm(unNx(et), out);
 	if (et->kind == Tr_cx) printStm(unCx(et).stm, out);
 } 
 
-void print_frag(F_fragList fl, FILE * out) {
-	if (!fl) {
-		puts("fragList is NULL");
+void fragOutput(F_fragList fragList, FILE * out) {
+	if (!fragList)
+	{
+		puts("FragList is empty.");
 		return;
 	}
-	while (fl) {
-		F_frag f = fl->head;
-		switch(f->kind) {
+	while (fragList)
+	{
+		F_frag f = fragList->head;
+		switch(f->kind) 
+		{
 		case F_stringFrag:
-			print(Tr_Ex(T_Name(f->u.stringg.label)), out);
+		{
+			output(Tr_Ex(T_Name(f->u.stringg.label)), out);
 			fprintf(out, "\n");
 			break;
-		case F_procFrag:
-			print(Tr_Nx(f->u.proc.body), out);
-			break;
-		default: assert(0 && "frag-kind is error");
 		}
-		fl = fl->tail;
+		case F_procFrag:
+		{
+			output(Tr_Nx(f->u.proc.body), out);
+			break;
+		}
+		default: assert(0 && "Frag type invalid!");
+		}
+		fragList = fragList->tail;
 		fflush(out);
 	}
 }

@@ -21,7 +21,7 @@ void setup(void)
     strLen = 0;
     strbuf[0] = '\0';
 }
-void appendstr(char *str)
+void append(char *str)
 {
     if (strLen + strlen(str) < BUFSIZE)
     {
@@ -92,14 +92,14 @@ void adjust(void)
 
 <STR>{
 	\" 			     {adjust(); yylval.sval=String(strbuf); BEGIN(INITIAL); return STRING;}
-	\\n			     {adjust(); appendstr("\n");}
-	\\t			     {adjust(); appendstr("\t");}
-	\\[0-9]{3}	     {adjust(); appendstr(yytext);}
-	\\[\\\"]		 {adjust(); appendstr(yytext);}
+	\\n			     {adjust(); append("\n");}
+	\\t			     {adjust(); append("\t");}
+	\\[0-9]{3}	     {adjust(); append(yytext);}
+	\\[\\\"]		 {adjust(); append(yytext);}
 	\\[ \n\t\r\f]+\\ {adjust(); continue;}
 	\\(.|\n)	     {adjust(); EM_error(EM_tokPos, "illegal token");}
 	(\n|\r\n)	     {adjust(); EM_error(EM_tokPos, "illegal token");}
-	[^\"\\\n(\r\n)]+ {adjust(); appendstr(yytext);}
+	[^\"\\\n(\r\n)]+ {adjust(); append(yytext);}
 }
 .	        {adjust(); EM_error(EM_tokPos,"illegal token");}
 

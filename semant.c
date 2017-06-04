@@ -54,13 +54,10 @@ static bool equal_ty(Ty_ty ty_a, Ty_ty ty_b)
 
 	return Record_equal_nil || Record_or_Array_equal || Normal_equal;
 }
-
 /*-----------------------------------------------------------------------------------------------------*/
-
 F_fragList SEM_transProg(A_exp exp)
 {
 	struct expty et = transExp(Tr_outermost(), NULL, E_base_venv(), E_base_tenv(), exp);
-
 	return Tr_getResult();
 }
 
@@ -68,87 +65,84 @@ static struct expty transVar(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 	/*empty*/
 	if (!v)
 		return expTy(Tr_noExp(), Ty_Void());
-
-	Tr_exp Var = Tr_noExp();
-	struct expty ExpTy;
-
-	switch (v->kind)
+	else
 	{
-	case A_simpleVar:
-	{
-		E_enventry Env = S_look(venv, v->u.simple);
-		
-		/*Not found*/
-		if (!Env || Env->kind != E_varEntry)
+		Tr_exp Var = Tr_noExp();
+		struct expty ExpTy;
+		switch (v->kind)
 		{
-			EM_error(v->pos, "Undefined variable: \'%s\'.", S_name(v->u.simple));
-			break;
-		}
-		else
+		case A_simpleVar:
 		{
-			Var = Tr_simpleVar(Env->u.var.access, level);
-			return expTy(Var, actual_ty(Env->u.var.ty));
-		}
-	}
-	case A_fieldVar:
-	{
-		ExpTy = transVar(level, breakk, venv, tenv, v->u.field.var);
-		
-		/*Type error*/
-		if (ExpTy.ty->kind != Ty_record)
-		{
-			EM_error(v->pos, "\'%s\' is not a record type.", S_name(v->u.field.var->u.simple));
-			break;
-		}
-		else
-		{
-			int Offset = 0;
-			Ty_fieldList fieldList;
-			fieldList = ExpTy.ty->u.record;
-			while (fieldList)
+			E_enventry envSimple = S_look(venv, v->u.simple);
+			/*Not found*/
+			if (!envSimple || envSimple->kind != E_varEntry)
 			{
-				if (fieldList->head->name == v->u.field.sym)
-				{
-					Var = Tr_fieldVar(ExpTy.exp, Offset);
-					return expTy(Var, actual_ty(fieldList->head->ty));
-				}
-				fieldList = fieldList->tail;
-				Offset++;
-			}
-			EM_error(v->pos, "Can't find field \'%s\' in record type", S_name(v->u.field.sym));
-			break;
-		}
-	}
-	case A_subscriptVar: 
-	{
-		struct expty ExpTy_Subscript;
-		ExpTy = transVar(level, breakk, venv, tenv, v->u.subscript.var);
-		
-		if (ExpTy.ty->kind != Ty_array)
-		{
-			EM_error(v->pos, "Not a array type");
-			break;
-		}
-		else
-		{
-			ExpTy_Subscript = transExp(level, breakk, venv, tenv, v->u.subscript.exp);
-			if (ExpTy_Subscript.ty->kind != Ty_int)
-			{
-				EM_error(v->pos, "Subscript is not int type!");
+				EM_error(v->pos, "Undefined variable: \'%s\'.", S_name(v->u.simple));
 				break;
 			}
 			else
 			{
-				Var = Tr_subscriptVar(ExpTy.exp, ExpTy_Subscript.exp);
-				return expTy(Var, actual_ty(ExpTy.ty->u.array));
+				Var = Tr_simpleVar(envSimple->u.var.access, level);
+				return expTy(Var, actual_ty(envSimple->u.var.ty));
 			}
 		}
-	}
-	default:
-		assert(0);
-	}
-	/*return when error found*/
-	return expTy(Tr_noExp(), Ty_Int());
+		case A_fieldVar:
+		{
+			ExpTy = transVar(level, breakk, venv, tenv, v->u.field.var);
+			/*Type error*/
+			if (ExpTy.ty->kind != Ty_record)
+			{
+				EM_error(v->pos, "\'%s\' is not a record type.", S_name(v->u.field.var->u.simple));
+				break;
+			}
+			else
+			{
+				int Offset = 0;
+				Ty_fieldList fieldList = ExpTy.ty->u.record;
+				while (fieldList)
+				{
+					if (fieldList->head->name == v->u.field.sym)
+					{
+						Var = Tr_fieldVar(ExpTy.exp, Offset);
+						return expTy(Var, actual_ty(fieldList->head->ty));
+					}
+					fieldList = fieldList->tail;
+					Offset++;
+				}
+				EM_error(v->pos, "Can't find field \'%s\' in record type", S_name(v->u.field.sym));
+				break;
+			}
+		}
+		case A_subscriptVar:
+		{
+			struct expty ExpTy_Subscript;
+			ExpTy = transVar(level, breakk, venv, tenv, v->u.subscript.var);
+			if (ExpTy.ty->kind != Ty_array)
+			{
+				EM_error(v->pos, "Not a array type");
+				break;
+			}
+			else
+			{
+				ExpTy_Subscript = transExp(level, breakk, venv, tenv, v->u.subscript.exp);
+				if (ExpTy_Subscript.ty->kind != Ty_int)
+				{
+					EM_error(v->pos, "Subscript is not int type!");
+					break;
+				}
+				else
+				{
+					Var = Tr_subscriptVar(ExpTy.exp, ExpTy_Subscript.exp);
+					return expTy(Var, actual_ty(ExpTy.ty->u.array));
+				}
+			}
+		}
+		default:
+			assert(0);
+		}
+		/*return when error found*/
+		return expTy(Tr_noExp(), Ty_Int());
+	}	
 }
 static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_table tenv, A_exp e) {
 	/*empty*/
@@ -175,32 +169,31 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 		else
 		{
 			struct expty tempArg;
-			A_expList Arguments = NULL;
+			A_expList arguments = e->u.call.args;
 			Tr_expList ArgumentList = NULL;
 			Ty_tyList formalList = FunCall->u.fun.formals;
-			Arguments = e->u.call.args;
-			while (Arguments)
+			while (arguments)
 			{
-				Tr_add_exp(transExp(level, breakk, venv, tenv, Arguments->head).exp, &ArgumentList);
-				Arguments = Arguments->tail;
+				Tr_add_exp(transExp(level, breakk, venv, tenv, arguments->head).exp, &ArgumentList);
+				arguments = arguments->tail;
 			}
 			Exp = Tr_callExp(FunCall->u.fun.label, FunCall->u.fun.level, level, &ArgumentList);
-			Arguments = e->u.call.args;
+			arguments = e->u.call.args;
 
-			while (Arguments && formalList)
+			while (arguments && formalList)
 			{
-				tempArg = transExp(level, breakk, venv, tenv, Arguments->head);
+				tempArg = transExp(level, breakk, venv, tenv, arguments->head);
 				if (!equal_ty(tempArg.ty, formalList->head))
 				{
 					EM_error(e->pos, "Function parameters type failed to match in \'%s\'\n", S_name(e->u.call.func));
 					return expTy(Exp, Ty_Void());
 				}
-				Arguments = Arguments->tail;
+				arguments = arguments->tail;
 				formalList = formalList->tail;
 			}
-			if (Arguments && !formalList)
+			if (arguments && !formalList)
 				EM_error(e->pos, "Function \'%s\' parameter redundant!\n", S_name(e->u.call.func));
-			else if (!Arguments && formalList)
+			else if (!arguments && formalList)
 				EM_error(e->pos, "Function \'%s\' parameter insufficient!\n", S_name(e->u.call.func));
 			else if (!FunCall->u.fun.result)
 				EM_error(e->pos, "Function \'%s\' return type undefined.\n", S_name(e->u.call.func));
@@ -243,7 +236,6 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 					OpExp = Tr_stringCmpExp(e->u.op.oper, leftExp.exp, rightExp.exp);
 				break;
 			}
-
 			case Ty_array:
 			{
 				if (!equal_ty(rightExp.ty, leftExp.ty))
@@ -264,7 +256,6 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 				EM_error(e->u.op.right->pos, "Unexpected type of left hand side.");
 			}
 			break;
-
 		}
 		case A_ltOp:
 		case A_leOp:
@@ -410,7 +401,6 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 
 			if (else_exp && then_exp->kind == A_intExp && then_exp->u.intt == 1) // or
 			{
-				printf("reach1\n");
 				testExpTy = transExp(level, breakk, venv, tenv, test_exp); //single test
 				thenExpTy = transExp(level, breakk, venv, tenv, then_exp); //single test
 				elseExpTy = transExp(level, breakk, venv, tenv, else_exp);
@@ -419,14 +409,12 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 			}
 			else if (else_exp && else_exp->kind == A_intExp && else_exp->u.intt == 0)
 			{
-				printf("reach2\n");
 				testExpTy = transExp(level, breakk, venv, tenv, test_exp); //single test
 				thenExpTy = transExp(level, breakk, venv, tenv, then_exp); //single test
 				elseExpTy = transExp(level, breakk, venv, tenv, else_exp);
 
 				return expTy(Tr_eseqExp(Tr_ifExp(testExpTy.exp, Tr_ifExp(thenExpTy.exp, assing_true, assing_false), assing_false), tmp), elseExpTy.ty);
 			}
-			printf("reach3\n");
 			testExpTy = transExp(level, breakk, venv, tenv, test_exp);
 			thenExpTy = transExp(level, breakk, venv, tenv, then_exp);
 			if (else_exp)
@@ -510,13 +498,9 @@ static struct expty transExp(Tr_level level, Tr_exp breakk, S_table venv, S_tabl
 	{
 		Ty_ty arrayTy = actual_ty(S_look(tenv, e->u.array.typ));
 		if (!arrayTy)
-		{
 			EM_error(e->pos, "Array type \'%s\' is undefined!", S_name(e->u.array.typ));
-		}
 		else if (arrayTy->kind != Ty_array)
-		{
 			EM_error(e->pos, "\'%s\' is not a array type!", S_name(e->u.array.typ));
-		}
 		else
 		{
 			struct expty sizeExpTy = transExp(level, breakk, venv, tenv, e->u.array.size);
@@ -692,7 +676,7 @@ static		 Tr_exp transDec(Tr_level level, Tr_exp breakk, S_table venv, S_table te
 			typeList = typeList->tail;
 		}
 		if (Cycle)
-			EM_error(d->pos, "Illegal Cycle.");
+			EM_error(d->pos, "Illegal cycle.");
 		return Tr_noExp();
 	}
 	default:

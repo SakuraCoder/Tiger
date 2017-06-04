@@ -55,48 +55,47 @@ static void doProc(FILE *out, F_frame frame, T_stm body)
 
 int main(int argc, string *argv)
 {
- A_exp absyn_root;
- S_table base_env, base_tenv;
- F_fragList frags;
- char outfile[100];
- FILE *out = stdout;
+	A_exp absyn_root;
+	S_table base_env, base_tenv;
+	F_fragList fragList;
+	char outfile[100];
+	FILE *out = stdout;
 
- if (argc==2) {
-   absyn_root = parse(argv[1]);
-   if (!absyn_root) return 1;
-   #if 0 
-   pr_exp(out, absyn_root, 0); /* print absyn data structure */
-   fprintf(out, "\n");
-   #endif
+	if (argc==2) 
+	{
+		absyn_root = parse(argv[1]);
+		if (!absyn_root) 
+			return 1;
+		#if 0 
+		pr_exp(out, absyn_root, 0); /* print absyn data structure */
+		fprintf(out, "\n");
+		#endif
 
-   frags = SEM_transProg(absyn_root);
-   if (anyErrors) return 1; /* don't continue */
+		fragList = SEM_transProg(absyn_root);
+		if (anyErrors) 
+			return 1; /* don't continue */
 
-   /* convert the filename */
-   sprintf(outfile, "%s.s", argv[1]);
-   out = fopen(outfile, "w");
-
-   FILE * f1 = fopen("Output/IR Tree.txt", "w");
-   FILE * f2 = fopen("Output/Absyn Tree.txt", "w");
-   if (absyn_root) {
-     pr_exp(f2, absyn_root, 0);
-     fclose(f2);
-     print_frag(frags, f1);
-     fclose(f1);
-
-   }
-   for (;frags;frags=frags->tail) {
-        if (frags->head->kind == F_procFrag) {
-            doProc(out, frags->head->u.proc.frame, frags->head->u.proc.body);
-        }
-        else if (frags->head->kind == F_stringFrag) {
-            fprintf(out, "%s: %s\n",Temp_labelstring(frags->head->u.stringg.label), frags->head->u.stringg.str);
-        }
-        else assert(0);
-   }
-   fclose(out);
-   return 0;
- }
- EM_error(0,"usage: tiger file.tig");
- return 1;
+		/* convert the filename */
+		sprintf(outfile, "%s.s", argv[1]);
+		out = fopen(outfile, "w");
+		FILE * f1 = fopen("Output/IR Tree.txt", "w");
+		FILE * f2 = fopen("Output/Absyn Tree.txt", "w");
+		if (absyn_root) 
+		{
+			pr_exp(f2, absyn_root, 0);
+			fclose(f2);
+			fragOutput(fragList, f1);
+			fclose(f1);
+		}
+		for (;fragList;fragList=fragList->tail)
+			if (fragList->head->kind == F_procFrag)
+				doProc(out, fragList->head->u.proc.frame, fragList->head->u.proc.body);
+			else if (fragList->head->kind == F_stringFrag)
+				fprintf(out, "%s: %s\n",Temp_labelstring(fragList->head->u.stringg.label), fragList->head->u.stringg.str);
+			else assert(0);
+		fclose(out);
+		return 0;
+	}
+	EM_error(0,"usage: tiger file.tig");
+	return 1;
 }
