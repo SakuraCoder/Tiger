@@ -45,7 +45,7 @@ inline void move(string p2asm_str, char *asm_string, T_exp dst, T_exp src, int c
 {
     sprintf(asm_string, "mov `s1, %d(`s0)", constt); 
     p2asm_str = String(asm_string); 
-    emit(AS_Move(p2asm_str, NULL, TL(munchExp(dst), TL(munchExp(src), NULL))));
+    emit(AS_Move(p2asm_str, NULL, Temp_TempList(munchExp(dst), Temp_TempList(munchExp(src), NULL))));
 }
 
 inline void match_cmp(int I, char *op){
@@ -80,19 +80,19 @@ static Temp_temp munchExp(T_exp e)
             {
                 write_asmstringstrint(assem_string, "%s $%x, `d0", op, left->u.CONST);   
                 p2asm_str = String(assem_string);
-                emit(AS_Oper(p2asm_str, TL(r = munchExp(right), NULL), NULL, NULL));
+                emit(AS_Oper(p2asm_str, Temp_TempList(r = munchExp(right), NULL), NULL, NULL));
             } 
             else if (e->u.BINOP.right->kind == T_CONST) 
             {
                 write_asmstringstrint(assem_string, "%s $%x, `d0", op, right->u.CONST);
                 p2asm_str = String(assem_string);  
-                emit(AS_Oper(p2asm_str, TL(r = munchExp(left), NULL), NULL, NULL));
+                emit(AS_Oper(p2asm_str, Temp_TempList(r = munchExp(left), NULL), NULL, NULL));
             } 
             else 
             { 
                 write_asmstringstr(assem_string, "%s `s0, `d0", op);
                 p2asm_str = String(assem_string);
-                emit(AS_Oper(p2asm_str, TL(r = munchExp(right), NULL), TL(munchExp(left), NULL), NULL));
+                emit(AS_Oper(p2asm_str, Temp_TempList(r = munchExp(right), NULL), Temp_TempList(munchExp(left), NULL), NULL));
             }
             return r;
         }
@@ -106,13 +106,13 @@ static Temp_temp munchExp(T_exp e)
                 { 
                     write_asmstringint(assem_string, "mov %d(`s0), `d0", left->u.CONST);
                     p2asm_str = String(assem_string);
-                    emit(AS_Move(p2asm_str, TL(r, NULL), TL(munchExp(right), NULL)));
+                    emit(AS_Move(p2asm_str, Temp_TempList(r, NULL), Temp_TempList(munchExp(right), NULL)));
                 } 
                 else if (right->kind == T_CONST) 
                 { 
                     write_asmstringint(assem_string, "mov %d(`s0), `d0", right->u.CONST);
                     p2asm_str = String(assem_string);
-                    emit(AS_Move(p2asm_str, TL(r, NULL), TL(munchExp(left), NULL)));
+                    emit(AS_Move(p2asm_str, Temp_TempList(r, NULL), Temp_TempList(munchExp(left), NULL)));
                 } 
                 else
                 { 
@@ -123,11 +123,11 @@ static Temp_temp munchExp(T_exp e)
             {
                 write_asmstringint(assem_string, "mov ($0x%x), `d0", mem->u.CONST);
                 p2asm_str = String(assem_string);
-                emit(AS_Move(p2asm_str, TL(r, NULL), NULL));
+                emit(AS_Move(p2asm_str, Temp_TempList(r, NULL), NULL));
             } 
             else 
             {
-                emit(AS_Move(String("mov (`s0), `d0"), TL(r, NULL), TL(munchExp(mem->u.MEM), NULL)));
+                emit(AS_Move(String("mov (`s0), `d0"), Temp_TempList(r, NULL), Temp_TempList(munchExp(mem->u.MEM), NULL)));
             }
             return r;
         }
@@ -139,20 +139,20 @@ static Temp_temp munchExp(T_exp e)
         }
         case T_NAME: 
         {
-        	Temp_enter(F_TEMPMAP, r, Temp_labelstring(e->u.NAME)); 
+        	Temp_enter(F_TempMap(), r, Temp_labelstring(e->u.NAME));
         	return r;
         }
         case T_CONST: 
         {
             write_asmstringint(assem_string,"mov $0x%x, `d0", e->u.CONST);
             p2asm_str = String(assem_string);
-            emit(AS_Move(p2asm_str, TL(r, NULL), NULL));
+            emit(AS_Move(p2asm_str, Temp_TempList(r, NULL), NULL));
             return r;
         }
         case T_CALL: 
         {
             r = munchExp(e->u.CALL.fun);
-            emit(AS_Oper(String("call `s0"), F_calldefs(), TL(r, munchArgs(0, e->u.CALL.args)), NULL));
+            emit(AS_Oper(String("call `s0"), F_calllist(), Temp_TempList(r, munchArgs(0, e->u.CALL.args)), NULL));
             return r; 
         }
         default: 
@@ -185,7 +185,7 @@ static void munchStm(T_stm s)
         case T_JUMP: 
         {
             Temp_temp r = munchExp(s->u.JUMP.exp);
-            emit(AS_Oper(String("jmp `d0"), TL(r, NULL), NULL, AS_Targets(s->u.JUMP.jumps)));
+            emit(AS_Oper(String("jmp `d0"), Temp_TempList(r, NULL), NULL, AS_Targets(s->u.JUMP.jumps)));
             break;
         }
         case T_MOVE:
@@ -208,20 +208,20 @@ static void munchStm(T_stm s)
                 { 
                     write_asmstringint(assem_string,"mov `s0, (%d)", dst->u.MEM->u.CONST);
                     p2asm_str = String(assem_string);
-                    emit(AS_Move(p2asm_str, NULL, TL(munchExp(src), NULL)));
+                    emit(AS_Move(p2asm_str, NULL, Temp_TempList(munchExp(src), NULL)));
                 } 
                 else if (src->kind == T_MEM) 
                 {
-                    emit(AS_Move("mov `s1, (`s0)", NULL, TL(munchExp(dst->u.MEM), TL(munchExp(src->u.MEM), NULL))));
+                    emit(AS_Move("mov `s1, (`s0)", NULL, Temp_TempList(munchExp(dst->u.MEM), Temp_TempList(munchExp(src->u.MEM), NULL))));
                 } 
                 else 
                 { 
-                    emit(AS_Move(String("mov `s1, (`s0)"), NULL, TL(munchExp(dst->u.MEM), TL(munchExp(src), NULL))));
+                    emit(AS_Move(String("mov `s1, (`s0)"), NULL, Temp_TempList(munchExp(dst->u.MEM), Temp_TempList(munchExp(src), NULL))));
                 }   
             } 
             else if(dst->kind == T_TEMP) 
             { 
-                emit(AS_Move(String("mov `s0, `d0"), TL(munchExp(dst), NULL), TL(munchExp(src), NULL)));    
+                emit(AS_Move(String("mov `s0, `d0"), Temp_TempList(munchExp(dst), NULL), Temp_TempList(munchExp(src), NULL)));    
             } 
             else
             { 
@@ -234,7 +234,7 @@ static void munchStm(T_stm s)
         {
             char cmp[100];
             Temp_temp left = munchExp(s->u.CJUMP.left), right = munchExp(s->u.CJUMP.right);
-            emit(AS_Oper(String("cmp `s0, `s1"), NULL, TL(left, TL(right, NULL)), NULL));
+            emit(AS_Oper(String("cmp `s0, `s1"), NULL, Temp_TempList(left, Temp_TempList(right, NULL)), NULL));
             match_cmp(s->u.CJUMP.op, cmp);  
             write_asmstringstr(assem_string, "%s `j0", cmp);
             p2asm_str = String(assem_string);
@@ -254,7 +254,7 @@ static Temp_tempList munchArgs(int i, T_expList args)
     }
     Temp_tempList tlist = munchArgs(i + 1, args->tail);
     Temp_temp rarg = munchExp(args->head);
-    emit(AS_Oper(String("push `s0"), NULL, TL(rarg, NULL), NULL));  
+    emit(AS_Oper(String("push `s0"), NULL, Temp_TempList(rarg, NULL), NULL));  
     return (rarg, tlist);
 }
 

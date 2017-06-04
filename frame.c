@@ -172,7 +172,7 @@ Temp_temp F_FP()
 	if(!fp)
 	{
 		fp= Temp_newtemp();
-		Temp_enter(F_TEMPMAP, fp, "ebp");
+		Temp_enter(F_TempMap(), fp, "ebp");
 	}
 	return fp;
 } 
@@ -182,12 +182,12 @@ static Temp_tempList callersaves()
 {
 
 	Temp_temp ra = Temp_newtemp();
-	Temp_enter(F_TEMPMAP, ra, "ra");
-	return TL(F_FP(), NULL);
+	Temp_enter(F_TempMap(), ra, "ra");
+	return Temp_TempList(F_FP(), NULL);
 }
 
 
-Temp_tempList F_calldefs() 
+Temp_tempList F_calllist() 
 {
 	static Temp_tempList caller_rg = NULL;
 	if(!caller_rg)
@@ -195,4 +195,17 @@ Temp_tempList F_calldefs()
 		caller_rg = callersaves();
 	}
 	return caller_rg;
+}
+Temp_map F_TempMap()
+{
+	if (F_tempMap) 
+    {
+		return  F_tempMap;
+	}
+	else 
+	{
+		F_tempMap = Temp_empty();
+		return  F_tempMap;
+	}
+
 }
