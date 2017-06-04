@@ -24,27 +24,17 @@ S_table E_base_venv(void)
 {
   S_table E_enventry_BaseTable = S_empty();
 
-  E_enventry Fun_print		= E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_String(), NULL),											  Ty_Void());
-  E_enventry Fun_flush		= E_FunEntry(Tr_outermost(), Temp_newlabel(), NULL,																      Ty_Void());
-  E_enventry Fun_getchar	= E_FunEntry(Tr_outermost(), Temp_newlabel(), NULL,																	  Ty_String());
-  E_enventry Fun_ord		= E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_String(), NULL),											  Ty_Int());
-  E_enventry Fun_chr		= E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_Int(),	 NULL),											  Ty_String());
-  E_enventry Fun_size		= E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_String(), NULL),											  Ty_Int());
-  E_enventry Fun_substring  = E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_String(), Ty_TyList(Ty_Int(), Ty_TyList(Ty_Int(), NULL))), Ty_String());
-  E_enventry Fun_concat		= E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_String(), Ty_TyList(Ty_String(), NULL)),					  Ty_String());
-  E_enventry Fun_not		= E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_Int(),	 NULL),											  Ty_Int());
-  E_enventry Fun_exit		= E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_Int(),	 NULL),											  Ty_Void());
   /*Add basic functions of Tiger*/
-  S_enter(E_enventry_BaseTable, S_Symbol("print"), Fun_print);
-  S_enter(E_enventry_BaseTable, S_Symbol("flush"), Fun_flush);
-  S_enter(E_enventry_BaseTable, S_Symbol("getchar"), Fun_getchar);
-  S_enter(E_enventry_BaseTable, S_Symbol("ord"), Fun_ord);
-  S_enter(E_enventry_BaseTable, S_Symbol("chr"), Fun_chr);
-  S_enter(E_enventry_BaseTable, S_Symbol("size"), Fun_size);
-  S_enter(E_enventry_BaseTable, S_Symbol("substring"), Fun_substring);
-  S_enter(E_enventry_BaseTable, S_Symbol("concat"), Fun_concat);
-  S_enter(E_enventry_BaseTable, S_Symbol("not"), Fun_not);
-  S_enter(E_enventry_BaseTable, S_Symbol("exit"), Fun_exit);
+  S_enter(E_enventry_BaseTable, S_Symbol("print"),		E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_String(), NULL), Ty_Void()));
+  S_enter(E_enventry_BaseTable, S_Symbol("flush"),		E_FunEntry(Tr_outermost(), Temp_newlabel(), NULL, Ty_Void()));
+  S_enter(E_enventry_BaseTable, S_Symbol("getchar"),	E_FunEntry(Tr_outermost(), Temp_newlabel(), NULL, Ty_String()));
+  S_enter(E_enventry_BaseTable, S_Symbol("ord"),		E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_String(), NULL), Ty_Int()));
+  S_enter(E_enventry_BaseTable, S_Symbol("chr"),		E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_Int(), NULL), Ty_String()));
+  S_enter(E_enventry_BaseTable, S_Symbol("size"),		E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_String(), NULL), Ty_Int()));
+  S_enter(E_enventry_BaseTable, S_Symbol("substring"),	E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_String(), Ty_TyList(Ty_Int(), Ty_TyList(Ty_Int(), NULL))), Ty_String()));
+  S_enter(E_enventry_BaseTable, S_Symbol("concat"),		E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_String(), Ty_TyList(Ty_String(), NULL)), Ty_String()));
+  S_enter(E_enventry_BaseTable, S_Symbol("not"),		E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_Int(), NULL), Ty_Int()));
+  S_enter(E_enventry_BaseTable, S_Symbol("exit"),		E_FunEntry(Tr_outermost(), Temp_newlabel(), Ty_TyList(Ty_Int(), NULL), Ty_Void()));
   return E_enventry_BaseTable;
 }
 
